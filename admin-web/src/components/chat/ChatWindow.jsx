@@ -2,12 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, MoreVertical, Phone, Video } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, MoreVertical, Phone, Video } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 

@@ -5,12 +5,12 @@ export const authService = {
         const response = await api.post('/auth/login', { email, password });
 
         if (response.data.success) {
-            const { data, token } = response.data;
+            const { user, accessToken } = response.data.data;
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(data));
+            localStorage.setItem('token', accessToken);
+            localStorage.setItem('user', JSON.stringify(user));
 
-            return response.data;
+            return { success: true, data: user, token: accessToken };
         }
 
         throw new Error(response.data.message || 'Login failed');

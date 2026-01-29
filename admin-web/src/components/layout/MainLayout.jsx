@@ -31,42 +31,47 @@ const MainLayout = () => {
     };
 
     return (
-        <div className="flex h-screen bg-gray-50">
+        <div className="flex h-screen bg-[#f8fafc]">
             {/* Sidebar */}
             <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header (Desktop & Mobile) */}
-                <header className="bg-white border-b border-gray-200 px-6 py-4">
-                    <div className="flex items-center justify-between">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Header (Premium Glass) */}
+                <header className="sticky top-0 z-20 bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={toggleSidebar}
-                                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                onClick={() => setSidebarOpen(true)}
+                                className="lg:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
                             >
-                                <Menu className="w-6 h-6 text-gray-600" />
+                                <Menu className="w-6 h-6" />
                             </button>
                             <div>
-                                <h2 className="text-xl font-bold text-gray-800">{getPageTitle()}</h2>
+                                <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight hidden md:block uppercase text-sm">
+                                    {getPageTitle()}
+                                </h2>
                                 {currentClinic && (
-                                    <p className="text-sm text-gray-500 hidden md:block">
+                                    <p className="text-[11px] font-semibold text-primary-600 uppercase tracking-widest hidden md:block">
                                         {currentClinic.name}
                                     </p>
                                 )}
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <NotificationBell />
-                            <div className="hidden md:flex items-center gap-3 pl-4 border-l border-gray-200">
+                        <div className="flex items-center gap-6">
+                            <div className="relative">
+                                <NotificationBell />
+                            </div>
+
+                            <div className="hidden md:flex items-center gap-4 pl-6 border-l border-slate-200">
                                 <div className="text-right">
-                                    <p className="text-sm font-semibold text-gray-900">
+                                    <p className="text-sm font-bold text-slate-900 leading-tight">
                                         {user?.profile?.firstName} {user?.profile?.lastName}
                                     </p>
-                                    <p className="text-xs text-gray-500">{getRoleDisplayName()}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{getRoleDisplayName()}</p>
                                 </div>
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/20 ring-2 ring-white">
                                     {user?.profile?.firstName?.charAt(0)}
                                 </div>
                             </div>
@@ -75,8 +80,10 @@ const MainLayout = () => {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto">
-                    <Outlet />
+                <main className="flex-1 overflow-y-auto px-8 pb-8">
+                    <div className="max-w-7xl mx-auto animate-slide-up">
+                        <Outlet />
+                    </div>
                 </main>
             </div>
         </div>

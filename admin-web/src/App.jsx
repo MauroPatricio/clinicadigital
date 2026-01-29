@@ -27,7 +27,6 @@ import PatientsPage from './pages/PatientsPage';
 import PatientFormPage from './pages/PatientFormPage';
 import DoctorsPage from './pages/DoctorsPage';
 import DoctorFormPage from './pages/DoctorFormPage';
-import DoctorFormPage from './pages/DoctorFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ConsultationPage from './pages/doctor/ConsultationPage';

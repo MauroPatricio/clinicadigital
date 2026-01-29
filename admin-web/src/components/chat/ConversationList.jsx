@@ -1,13 +1,8 @@
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR, enUS } from 'date-fns/locale';
 import { Search, MessageSquare, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-
-import { format } from 'date-fns';
-import { ptBR, enUS } from 'date-fns/locale'; // Add enUS
-import { Search, MessageSquare, Plus } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useTranslation } from 'react-i18next'; // Import hook
+import { useTranslation } from 'react-i18next';
 
 const ConversationList = ({ conversations, activeConversation, onSelectConversation, onCreateNew }) => {
     const { user } = useAuth();
