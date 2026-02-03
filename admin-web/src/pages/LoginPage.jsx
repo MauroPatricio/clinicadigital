@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Lock, Mail, Activity } from 'lucide-react';
+import { Lock, Mail, Heart, Eye, EyeOff, Activity, PlusSquare } from 'lucide-react';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -16,9 +17,15 @@ const LoginPage = () => {
         setLoading(true);
 
         try {
-            await login(email, password);
+            const response = await login(email, password);
             toast.success('Login successful!');
-            navigate('/');
+
+            // Redirect based on role and clinic selection
+            if (response.data.role === 'admin' || response.data.roleType === 'owner' || response.data.roleType === 'manager') {
+                navigate('/clinic-selection');
+            } else {
+                navigate('/');
+            }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Login failed');
         } finally {
@@ -38,16 +45,16 @@ const LoginPage = () => {
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100">
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-indigo-600 rounded-[1.25rem] shadow-xl shadow-primary-500/30 mb-4 rotate-3 hover:rotate-0 transition-transform duration-500">
-                            <Activity className="w-8 h-8 text-white" />
+                            <Heart className="w-8 h-8 text-white fill-current" />
                         </div>
-                        <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight">Clinic<span className="text-primary-600">Digital</span></h1>
-                        <p className="text-slate-500 mt-1 font-bold tracking-wide uppercase text-[9px]">Healthcare Management Revolution</p>
+                        <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight">Clinica<span className="text-primary-600">Digital</span></h1>
+                        <p className="text-slate-500 mt-1 font-bold tracking-wide uppercase text-[9px]">Sistema de gestão de clínicas</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-1.5">
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">
-                                Electronic Mail
+                                e-mail
                             </label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-primary-600 transition-colors w-5 h-5" />
@@ -65,20 +72,27 @@ const LoginPage = () => {
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">
-                                    Identity Password
+                                    password
                                 </label>
-                                <a href="#" className="text-[9px] font-black text-primary-600 hover:text-primary-700 uppercase tracking-wider transition-colors">Forgot?</a>
+                                <a href="#" className="text-[9px] font-black text-primary-600 hover:text-primary-700 uppercase tracking-wider transition-colors">Esqueceu?</a>
                             </div>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-primary-600 transition-colors w-5 h-5" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 placeholder-slate-400 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white outline-none transition-all duration-200 font-semibold text-sm"
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3.5 pl-12 pr-12 text-slate-900 placeholder-slate-400 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white outline-none transition-all duration-200 font-semibold text-sm"
                                     placeholder="••••••••"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 
@@ -96,15 +110,22 @@ const LoginPage = () => {
                                 </span>
                             ) : (
                                 <span className="flex items-center justify-center gap-3 text-base">
-                                    Secure Access
-                                    <Activity className="w-5 h-5 group-hover:animate-pulse" />
+                                    Fazer login
+                                    <Activity className="w-5 h-5 group-hover:animate-pulse fill-current" />
                                 </span>
                             )}
                         </button>
                     </form>
 
+                    <div className="mt-6 text-center">
+                        <a href="/register" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 transition-colors font-black uppercase text-[10px] tracking-[0.1em] group/register">
+                            <PlusSquare className="w-4 h-4 text-primary-600 group-hover/register:scale-110 transition-transform" />
+                            Novo cadastro
+                        </a>
+                    </div>
+
                     <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5">System Credentials</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5">Credenciais do Sistema</p>
                         <div className="inline-flex items-center gap-2 px-5 py-2 bg-slate-50 rounded-xl border border-slate-100">
                             <span className="text-[10px] font-bold text-primary-700">admin@clinica.com</span>
                             <span className="h-3 w-px bg-slate-200"></span>
@@ -113,8 +134,8 @@ const LoginPage = () => {
                     </div>
                 </div>
 
-                <p className="mt-6 text-center text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">
-                    Power Lab Security • Digital Clinic v2.1.0
+                <p className="mt-6 text-center text-[9px] font-black text-slate-500 uppercase tracking-[0.1em]">
+                    Desenvolvido por Nhiquela Servicos e Consultoria, LDA
                 </p>
             </div>
         </div>

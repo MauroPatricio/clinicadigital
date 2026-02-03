@@ -281,8 +281,8 @@ export const getBillingStats = async (req, res, next) => {
         res.status(200).json({
             success: true,
             data: {
-                thisMonth: thisMonthStats,
-                lastMonth: lastMonthStats
+                thisMonth: thisMonthStats || [],
+                lastMonth: lastMonthStats || []
             }
         });
     } catch (error) {

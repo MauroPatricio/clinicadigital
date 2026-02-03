@@ -1,53 +1,5 @@
-import multer from 'multer';
-import path from 'path';
-import crypto from 'crypto';
+import { upload, uploadToCloudinary } from '../services/uploadService.js';
 import { AppError } from '../middleware/errorHandler.js';
-
-// Configure storage
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Store in uploads directory
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        // Generate unique filename
-        const uniqueSuffix = crypto.randomBytes(16).toString('hex');
-        const ext = path.extname(file.originalname);
-        cb(null, `${uniqueSuffix}${ext}`);
-    }
-});
-
-// File filter
-const fileFilter = (req, file, cb) => {
-    // Allowed file types
-    const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'audio/mpeg',
-        'audio/wav',
-        'video/mp4'
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new AppError('Invalid file type. Only images, PDFs, documents, audio, and video are allowed', 400), false);
-    }
-};
-
-// Create multer instance
-const upload = multer({
-    storage,
-    fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB max
-    }
-});
 
 // Middleware for single file upload
 export const uploadSingle = upload.single('file');
@@ -56,27 +8,36 @@ export const uploadSingle = upload.single('file');
 export const uploadMultiple = upload.array('files', 5);
 
 // Controller for handling file uploads
-export const handleFileUpload = (req, res, next) => {
+export const handleFileUpload = async (req, res, next) => {
     try {
         if (!req.file && !req.files) {
             return next(new AppError('No file uploaded', 400));
         }
 
         const files = req.files || [req.file];
-        const uploadedFiles = files.map(file => ({
-            filename: file.filename,
-            originalName: file.originalname,
-            mimeType: file.mimetype,
-            size: file.size,
-            url: `/uploads/${file.filename}`
+
+        // Upload each file to Cloudinary
+        const uploadPromises = files.map(file => uploadToCloudinary(file.buffer));
+        const uploadedFiles = await Promise.all(uploadPromises);
+
+        // Map to expected format
+        const response = uploadedFiles.map((result, index) => ({
+            filename: result.publicId,
+            originalName: files[index].originalname,
+            mimeType: files[index].mimetype,
+            size: files[index].size,
+            url: result.url,
+            path: result.url,
+            publicId: result.publicId
         }));
 
         res.status(200).json({
             success: true,
-            count: uploadedFiles.length,
-            data: uploadedFiles
+            count: response.length,
+            data: response
         });
     } catch (error) {
+        console.error('Upload error:', error);
         next(error);
     }
 };

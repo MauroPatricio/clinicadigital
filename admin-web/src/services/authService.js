@@ -1,6 +1,21 @@
 import api from './api';
 
 export const authService = {
+    async register(userData) {
+        const response = await api.post('/auth/register', userData);
+
+        if (response.data.success) {
+            const { user, accessToken } = response.data.data;
+
+            localStorage.setItem('token', accessToken);
+            localStorage.setItem('user', JSON.stringify(user));
+
+            return { success: true, data: user, token: accessToken };
+        }
+
+        throw new Error(response.data.message || 'Registration failed');
+    },
+
     async login(email, password) {
         const response = await api.post('/auth/login', { email, password });
 

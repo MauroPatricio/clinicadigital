@@ -6,6 +6,9 @@ import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import MainLayout from './components/layout/MainLayout';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ClinicSelectionPage from './pages/ClinicSelectionPage';
+import UnitRegistrationPage from './pages/UnitRegistrationPage';
 
 // Owner Pages
 import OwnerDashboard from './pages/owner/OwnerDashboard';
@@ -15,6 +18,10 @@ import CompareClinic from './pages/owner/CompareClinicsPage';
 // Manager Pages
 import ManagerDashboard from './pages/manager/ManagerDashboard';
 import StaffManagementPage from './pages/manager/StaffManagementPage';
+import ExamsPage from './pages/manager/ExamsPage';
+import RoomsPage from './pages/manager/RoomsPage';
+import FinancePage from './pages/manager/FinancePage';
+import ReportsManagerPage from './pages/manager/ReportsManagerPage';
 
 // Staff Pages
 import StaffDashboard from './pages/staff/StaffDashboard';
@@ -46,6 +53,9 @@ function App() {
                         <Routes>
                             {/* Public Routes */}
                             <Route path="/login" element={<LoginPage />} />
+                            <Route path="/register" element={<RegisterPage />} />
+                            <Route path="/clinic-selection" element={<ClinicSelectionPage />} />
+                            <Route path="/owner/units/new" element={<UnitRegistrationPage />} />
 
                             {/* Protected Routes with Layout */}
                             <Route
@@ -91,7 +101,11 @@ function App() {
                                     <Route path="staff" element={<StaffManagementPage />} />
                                     <Route path="appointments" element={<AppointmentsPage />} />
                                     <Route path="patients" element={<PatientsPage />} />
-                                    <Route path="rooms" element={<div className="p-6">Rooms (Coming Soon)</div>} />
+                                    <Route path="exams" element={<ExamsPage />} />
+                                    <Route path="rooms" element={<RoomsPage />} />
+                                    <Route path="equipment" element={<div className="p-6">Equipment (Coming Soon)</div>} />
+                                    <Route path="finance" element={<FinancePage />} />
+                                    <Route path="reports" element={<ReportsManagerPage />} />
                                     <Route path="analytics" element={<div className="p-6">Analytics (Coming Soon)</div>} />
                                     <Route path="settings" element={<div className="p-6">Settings (Coming Soon)</div>} />
                                     <Route path="messages" element={<ChatPage />} />

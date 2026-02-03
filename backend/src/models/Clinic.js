@@ -17,13 +17,18 @@ const clinicSchema = new mongoose.Schema({
     },
     code: {
         type: String,
-        unique: true,
-        required: true
+        unique: true
     },
     status: {
         type: String,
         enum: ['active', 'inactive', 'suspended'],
         default: 'active'
+    },
+    type: {
+        type: String,
+        enum: ['clinic', 'laboratory'],
+        default: 'clinic',
+        required: true
     },
     address: {
         street: {
@@ -154,6 +159,33 @@ const clinicSchema = new mongoose.Schema({
             default: 'available'
         }
     }],
+    // Laboratory-specific settings
+    laboratorySettings: {
+        certifications: [String],
+        equipmentList: [{
+            name: String,
+            model: String,
+            lastCalibration: Date,
+            nextCalibration: Date,
+            status: {
+                type: String,
+                enum: ['operational', 'maintenance', 'offline'],
+                default: 'operational'
+            }
+        }],
+        testCatalog: [{
+            testId: String,
+            testName: String,
+            category: String,
+            avgProcessingTime: Number,
+            price: Number
+        }],
+        qualityMetrics: {
+            sampleRejectionRate: { type: Number, default: 0 },
+            resultAccuracy: { type: Number, default: 100 },
+            turnaroundCompliance: { type: Number, default: 100 }
+        }
+    },
     isActive: {
         type: Boolean,
         default: true

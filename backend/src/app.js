@@ -1,9 +1,9 @@
+import 'dotenv/config'; // Must be first
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
+import rateLimit from 'express-rate-limit'; // Fixed import order
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import connectDB from './config/database.js';
@@ -24,14 +24,12 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import labRoutes from './routes/labRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import roomRoutes from './routes/roomRoutes.js';
+import reportsRoutes from './routes/reportsRoutes.js';
 // Multi-clinic routes
 import organizationRoutes from './routes/organizationRoutes.js';
 import clinicManagementRoutes from './routes/clinicManagementRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
-
-
-// Load environment variables
-dotenv.config();
 
 // Initialize Express app
 const app = express();
@@ -43,7 +41,9 @@ const io = new Server(httpServer, {
         origin: [
             process.env.FRONTEND_WEB_URL,
             process.env.FRONTEND_MOBILE_URL,
-            'http://localhost:4173'
+            'http://localhost:4173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173'
         ],
         credentials: true
     }
@@ -117,6 +117,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/lab', labRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/reports', reportsRoutes);
 // Multi-clinic routes
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/clinics', clinicManagementRoutes);

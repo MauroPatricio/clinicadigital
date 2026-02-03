@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, DollarSign, Users, TrendingUp, Award, Clock, AlertCircle } from 'lucide-react';
+import { Building2, DollarSign, Users, TrendingUp, Award, Clock, AlertCircle, FlaskConical, UserCog, Activity, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import StatCard from '../../components/premium/StatCard';
@@ -66,12 +66,17 @@ const OwnerDashboard = () => {
         );
     }
 
-    const { overview, bestPerformingClinic, topStaffMember, metrics, insights } = dashboardData;
+    const { overview, growth, alerts, unitPerformance, subscription, bestPerformingClinic, topStaffMember, metrics, insights } = dashboardData;
 
     // Prepare chart data
     const serviceData = insights.topServices.map(s => ({
         name: s._id,
         value: s.count
+    }));
+
+    const unitComparisonData = unitPerformance.topPerforming.map(u => ({
+        name: u.clinicData?.name || 'Unit',
+        revenue: u.revenue
     }));
 
     const COLORS = ['#0066CC', '#00CC99', '#FF6B6B', '#FFB020', '#A855F7'];
@@ -84,47 +89,119 @@ const OwnerDashboard = () => {
         }).format(value);
     };
 
+    const getGrowthColor = (growth) => {
+        return parseFloat(growth) >= 0 ? 'text-green-600' : 'text-red-600';
+    };
+
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard do Proprietário</h1>
+                <h1 className="text-3xl font-bold text-gray-900">✨ Dashboard Antigravity</h1>
                 <p className="text-gray-600 mt-1">
                     Bem-vindo, <span className="font-semibold">{user?.profile?.firstName || 'Proprietário'}</span>!
-                    Gerencie todas as suas {overview.totalClinics} clínicas em um só lugar.
+                    Gerencie todas as suas {overview.totalUnits} unidades ({overview.totalClinics} clínicas + {overview.totalLaboratories} laboratórios).
                 </p>
             </div>
 
-            {/* Overview Stats */}
+            {/* Critical Alerts */}
+            {alerts && alerts.length > 0 && (
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                        <Bell className="w-5 h-5 text-orange-600 mt-0.5 animate-pulse" />
+                        <div className="flex-1">
+                            <h3 className="font-bold text-gray-900 mb-2">Alertas Críticos</h3>
+                            <div className="space-y-2">
+                                {alerts.map((alert, idx) => (
+                                    <div key={idx} className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${alert.severity === 'critical' ? 'bg-red-500' :
+                                                alert.severity === 'high' ? 'bg-orange-500' :
+                                                    'bg-yellow-500'
+                                                }`} />
+                                            <span className="text-sm text-gray-900">{alert.message}</span>
+                                        </div>
+                                        <button className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                            {alert.action}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Overview Stats - Row 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Total de Clínicas"
-                    value={overview.totalClinics}
+                    title="Unidades Ativas"
+                    value={overview.totalUnits}
+                    subtitle={`${overview.totalClinics} Clínicas + ${overview.totalLaboratories} Labs`}
                     icon={Building2}
                     color="blue"
+                />
+                <StatCard
+                    title="Total de Membros"
+                    value={overview.totalStaff}
+                    subtitle={`${overview.totalDoctors} Médicos + ${overview.totalTechnicians} Técnicos`}
+                    icon={Users}
+                    color="purple"
+                />
+                <StatCard
+                    title="Pacientes Cadastrados"
+                    value={overview.totalPatients}
+                    subtitle={`+${overview.newPatientsThisMonth} este mês`}
+                    icon={UserCog}
+                    color="emerald"
                 />
                 <StatCard
                     title="Receita Total"
                     value={formatCurrency(overview.totalRevenue)}
                     icon={DollarSign}
                     color="green"
-                    change={12.5}
-                    changeType="up"
+                    change={growth.revenueGrowth}
+                    changeType={growth.revenueGrowth >= 0 ? 'up' : 'down'}
                 />
-                <StatCard
-                    title="Consultas (Mês)"
-                    value={metrics.totalAppointments}
-                    icon={Users}
-                    color="purple"
-                />
-                <StatCard
-                    title="Taxa de Falta"
-                    value={`${metrics.noShowRate}%`}
-                    icon={AlertCircle}
-                    color={metrics.noShowRate > 15 ? 'red' : 'orange'}
-                    change={2.3}
-                    changeType="down"
-                />
+            </div>
+
+            {/* Growth Indicators */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-600">Crescimento de Receita</p>
+                            <p className={`text-3xl font-bold ${getGrowthColor(growth.revenueGrowth)}`}>
+                                {growth.revenueGrowth > 0 ? '+' : ''}{growth.revenueGrowth}%
+                            </p>
+                        </div>
+                        <TrendingUp className="w-10 h-10 text-blue-600" />
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-600">Crescimento de Consultas</p>
+                            <p className={`text-3xl font-bold ${getGrowthColor(growth.appointmentGrowth)}`}>
+                                {growth.appointmentGrowth > 0 ? '+' : ''}{growth.appointmentGrowth}%
+                            </p>
+                        </div>
+                        <Activity className="w-10 h-10 text-purple-600" />
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-600">Novos Pacientes</p>
+                            <p className={`text-3xl font-bold ${getGrowthColor(growth.patientGrowth)}`}>
+                                {growth.patientGrowth > 0 ? '+' : ''}{growth.patientGrowth}%
+                            </p>
+                        </div>
+                        <Users className="w-10 h-10 text-emerald-600" />
+                    </div>
+                </div>
             </div>
 
             {/* Best Performing Clinic & Top Staff */}
@@ -183,6 +260,20 @@ const OwnerDashboard = () => {
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Unit Performance Comparison - NEW */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Comparação de Unidades</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={unitComparisonData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip formatter={(value) => formatCurrency(value)} />
+                            <Bar dataKey="revenue" fill="#0066CC" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
                 {/* Top Services */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Serviços Mais Solicitados</h3>

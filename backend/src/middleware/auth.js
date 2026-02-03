@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import asyncHandler from 'express-async-handler';
+import { AppError } from './errorHandler.js';
 
 // Protect routes - verify JWT token
 export const protect = asyncHandler(async (req, res, next) => {
@@ -221,13 +222,16 @@ export const requireActiveSubscription = asyncHandler(async (req, res, next) => 
     }
 
     if (!organization) {
-        res.status(403);
-        throw new Error('Organization not found');
+        // If it's an owner and no organization is found, allow them to proceed 
+        // purely so they can CREATE their organization/clinic.
+        if (req.user.roleType === 'owner') {
+            return next();
+        }
+        return next(new AppError('Organization not found', 403));
     }
 
     if (!organization.isSubscriptionActive()) {
-        res.status(403);
-        throw new Error('Subscription is not active. Please renew to continue');
+        return next(new AppError('Subscription is not active. Please renew to continue', 403));
     }
 
     // Attach organization to request for later use

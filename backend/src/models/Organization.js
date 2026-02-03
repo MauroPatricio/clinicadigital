@@ -54,7 +54,7 @@ const organizationSchema = new mongoose.Schema({
     limits: {
         maxClinics: {
             type: Number,
-            default: 1
+            default: 10
         },
         maxStaff: {
             type: Number,
@@ -147,7 +147,7 @@ organizationSchema.pre('save', async function (next) {
 // Set default expiry date (30 days trial)
 organizationSchema.pre('save', function (next) {
     if (this.isNew && !this.subscription.expiryDate) {
-        const trialDays = 30;
+        const trialDays = 15;
         this.subscription.expiryDate = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
     }
     next();
@@ -162,7 +162,7 @@ organizationSchema.virtual('clinics', {
 
 // Method to check if subscription is active
 organizationSchema.methods.isSubscriptionActive = function () {
-    return this.subscription.status === 'active' &&
+    return (this.subscription.status === 'active' || this.subscription.status === 'trial') &&
         new Date() < this.subscription.expiryDate;
 };
 

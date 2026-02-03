@@ -90,6 +90,7 @@ export const ClinicProvider = ({ children }) => {
         loading,
         switchClinic,
         refreshClinic,
+        loadClinics, // Exposed to allow manual refresh
         canSwitchClinics: isOwner() && availableClinics.length > 1
     };
 

@@ -15,6 +15,11 @@ export const dashboardService = {
         const response = await api.get('/patients?limit=5');
         return response.data.data;
     },
+
+    async getUnitStats(unitId) {
+        const response = await api.get(`/analytics/unit/${unitId}`);
+        return response.data.data;
+    },
 };
 
 export const appointmentService = {

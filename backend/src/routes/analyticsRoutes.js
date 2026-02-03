@@ -4,7 +4,8 @@ import {
     getManagerDashboard,
     getStaffDashboard,
     getClinicAnalytics,
-    getStaffPerformanceReport
+    getStaffPerformanceReport,
+    getUnitDashboard
 } from '../controllers/analyticsController.js';
 import {
     protect,
@@ -52,6 +53,11 @@ router.get(
     '/staff-performance/:clinicId',
     requireFeature('analytics'),
     getStaffPerformanceReport
+);
+
+router.get(
+    '/unit/:unitId',
+    getUnitDashboard
 );
 
 export default router;

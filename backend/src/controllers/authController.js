@@ -10,7 +10,7 @@ import logger from '../config/logger.js';
 // @access  Public
 export const register = async (req, res, next) => {
     try {
-        const { email, password, role, profile, specialization, licenseNumber } = req.body;
+        const { email, password, role, roleType, profile, specialization, licenseNumber } = req.body;
 
         // Check if user exists
         const existingUser = await User.findOne({ email });
@@ -22,7 +22,8 @@ export const register = async (req, res, next) => {
         const user = await User.create({
             email,
             password,
-            role: role || 'patient',
+            role: roleType === 'owner' ? 'admin' : (role || 'patient'),
+            roleType: roleType || role || 'patient', // Support both for compatibility
             profile
         });
 
@@ -57,7 +58,10 @@ export const register = async (req, res, next) => {
                     id: user._id,
                     email: user.email,
                     role: user.role,
-                    profile: user.profile
+                    roleType: user.roleType,
+                    profile: user.profile,
+                    clinic: user.clinic,
+                    organization: user.organization
                 },
                 accessToken,
                 refreshToken
@@ -117,7 +121,10 @@ export const login = async (req, res, next) => {
                     id: user._id,
                     email: user.email,
                     role: user.role,
-                    profile: user.profile
+                    roleType: user.roleType,
+                    profile: user.profile,
+                    clinic: user.clinic,
+                    organization: user.organization
                 },
                 accessToken,
                 refreshToken
