@@ -18,7 +18,27 @@ import {
     MessageSquare,
     UserCog,
     FlaskConical,
-    Sparkles
+    Sparkles,
+    FileHeart,
+    CalendarClock,
+    Video,
+    Package,
+    Brain,
+    ClipboardList,
+    Shield,
+    TrendingUp,
+    Bell,
+    Pill,
+    Wallet,
+    PieChart,
+    ScrollText,
+    Building,
+    Megaphone,
+    Lock,
+    UserPlus,
+    Banknote,
+    History,
+    AlertCircle
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -40,30 +60,156 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         navigate('/login');
     };
 
+    // Owner Menu - Reorganized per User Request
+    const ownerItems = [
+        {
+            name: 'Dashboard',
+            icon: LayoutDashboard,
+            path: '/owner/dashboard'
+        },
+        {
+            name: 'Utilizadores',
+            icon: Users,
+            path: '/owner/users',
+            submenu: [
+                { name: 'Gestão de Utilizadores', path: '/owner/users' },
+                { name: 'Permissões', path: '/owner/permissions' }
+            ]
+        },
+        {
+            name: 'Médicos',
+            icon: Stethoscope,
+            path: '/owner/doctors',
+            submenu: [
+                { name: 'Lista de Médicos', path: '/owner/doctors' },
+                { name: 'Escalas', path: '/owner/doctors/schedules' },
+                { name: 'Desempenho', path: '/owner/doctors/performance' },
+                { name: 'Comissões', path: '/owner/doctors/commissions' }
+            ]
+        },
+        {
+            name: 'Pacientes',
+            icon: FileHeart,
+            path: '/owner/patients',
+            submenu: [
+                { name: 'Lista de Pacientes', path: '/owner/patients' },
+                { name: 'Histórico', path: '/owner/patients/clinical' },
+                { name: 'Histórico Financeiro', path: '/owner/patients/financial' }
+            ]
+        },
+        {
+            name: 'Agendamentos',
+            icon: Calendar,
+            path: '/owner/appointments',
+            submenu: [
+                { name: 'Agenda', path: '/owner/appointments' },
+                { name: 'Fila', path: '/owner/queue' },
+                { name: 'Confirmações', path: '/owner/confirmations' }
+            ]
+        },
+        {
+            name: 'Financeiro',
+            icon: DollarSign, // Or Wallet
+            path: '/owner/finance',
+            submenu: [
+                { name: 'Dashboard', path: '/owner/finance/dashboard' },
+                { name: 'Faturas', path: '/owner/finance/invoices' },
+                { name: 'Receitas', path: '/owner/finance/revenue' },
+                { name: 'Despesas', path: '/owner/finance/expenses' },
+                { name: 'Pagamentos Recorrentes', path: '/owner/finance/recurring' },
+                { name: 'Projeções', path: '/owner/finance/projections' },
+                { name: 'Comissões', path: '/owner/finance/commissions' }
+            ]
+        },
+        {
+            name: 'Laboratório',
+            icon: FlaskConical,
+            path: '/owner/laboratory',
+            submenu: [
+                { name: 'Solicitações', path: '/owner/laboratory/requests' },
+                { name: 'Resultados', path: '/owner/laboratory/results' },
+                { name: 'Histórico', path: '/owner/laboratory/history' }
+            ]
+        },
+        {
+            name: 'Farmácia',
+            icon: Pill, // Represents Farmácia well
+            path: '/owner/pharmacy',
+            submenu: [
+                { name: 'Vendas', path: '/owner/pharmacy/sales' },
+                { name: 'Estoque', path: '/owner/pharmacy/stock' },
+                { name: 'Fornecedores', path: '/owner/pharmacy/suppliers' }
+            ]
+        },
+        {
+            name: 'Stock',
+            icon: Package,
+            path: '/owner/stock',
+            submenu: [
+                { name: 'Inventário', path: '/owner/stock/inventory' },
+                { name: 'Movimentações', path: '/owner/stock/movements' },
+                { name: 'Alertas', path: '/owner/stock/alerts' }
+            ]
+        },
+        {
+            name: 'Relatórios',
+            icon: BarChart3,
+            path: '/owner/reports'
+        },
+        {
+            name: 'Convênios',
+            icon: ScrollText,
+            path: '/owner/insurance',
+            submenu: [
+                { name: 'Seguradoras', path: '/owner/finance/insurance' }, // Pointing to implemented page
+                { name: 'Faturas', path: '/owner/insurance/invoices' }
+            ]
+        },
+        {
+            name: 'Unidades',
+            icon: Building2,
+            path: '/owner/multiclinic',
+            submenu: [
+                { name: 'Visão Geral', path: '/owner/multiclinic/overview' },
+                { name: 'Comparação', path: '/owner/multiclinic/compare' },
+                { name: 'Transferências', path: '/owner/multiclinic/transfers' }
+            ]
+        },
+        {
+            name: 'Marketing',
+            icon: Megaphone,
+            path: '/owner/marketing',
+            submenu: [
+                { name: 'Campanhas', path: '/owner/marketing/campaigns' },
+                { name: 'Fidelização', path: '/owner/marketing/loyalty' }
+            ]
+        },
+        {
+            name: 'Configurações',
+            icon: Settings,
+            path: '/owner/settings',
+            submenu: [
+                { name: 'Geral', path: '/owner/settings' },
+                { name: 'Integrações', path: '/owner/settings/integrations' },
+                { name: 'Backup', path: '/owner/security/backup' }
+            ]
+        },
+        {
+            name: 'Auditoria',
+            icon: Shield,
+            path: '/owner/audit'
+        }
+    ];
+
     // Determine if current unit is a laboratory
     const isLaboratory = currentClinic?.type === 'laboratory';
 
     // Define menu items based on role
     const getMenuItems = () => {
-        // Owner Menu - Global View
-        const ownerItems = [
-            { name: 'Visão Global', icon: BarChart3, path: '/owner/dashboard' },
-            {
-                name: 'Minhas Unidades',
-                icon: Building2,
-                path: '/owner/clinics',
-                submenu: [
-                    { name: 'Todas as Unidades', path: '/owner/clinics' },
-                    { name: 'Comparar Desempenho', path: '/owner/clinics/compare' },
-                    { name: 'Adicionar Unidade', path: '/owner/clinics/new' }
-                ]
-            },
-            { name: 'Organização', icon: Settings, path: '/owner/organization' },
-            { name: 'Subscrição', icon: Sparkles, path: '/owner/subscription', badge: 'PRO' },
-            { name: 'Relatórios Globais', icon: FileText, path: '/owner/reports' }
-        ];
+        // Owner Menu - Uses the comprehensive list defined above
+        if (isOwner()) return ownerItems;
 
-        // Manager Menu - Unit Operations (Dynamic based on unit type)
+
         const managerItems = [
             {
                 name: isLaboratory ? 'Painel Laboratorial' : 'Painel Clínico',
@@ -75,19 +221,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 isSection: true
             },
             {
-                name: 'Pacientes',
-                icon: Users,
+                name: 'Gestão de Pacientes',
+                icon: FileHeart,
                 path: '/manager/patients',
-                description: 'Cadastro e histórico'
+                description: 'Cadastro, histórico e timeline',
+                submenu: [
+                    { name: 'Todos os Pacientes', path: '/manager/patients' },
+                    { name: 'Alertas Ativos', path: '/manager/patient-alerts' },
+                    { name: 'Prontuários', path: '/manager/medical-records' }
+                ]
             },
             {
-                name: isLaboratory ? 'Exames' : 'Consultas',
-                icon: isLaboratory ? FlaskConical : Calendar,
-                path: isLaboratory ? '/manager/exams' : '/manager/appointments',
-                description: isLaboratory ? 'Solicitações e resultados' : 'Agendamento e fila'
+                name: 'Agenda Inteligente',
+                icon: CalendarClock,
+                path: '/manager/appointments',
+                description: isLaboratory ? 'Exames e fila' : 'Consultas e fila',
+                submenu: [
+                    { name: 'Calendário', path: '/manager/appointments' },
+                    { name: 'Fila de Atendimento', path: '/manager/queue' },
+                    { name: 'Confirmações', path: '/manager/confirmations' }
+                ]
             },
             {
-                name: isLaboratory ? 'Técnicos' : 'Médicos & Staff',
+                name: isLaboratory ? 'Técnicos' : 'Profissionais',
                 icon: UserCog,
                 path: '/manager/staff',
                 description: 'Escalas e desempenho'
@@ -97,6 +253,40 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 icon: Building2,
                 path: isLaboratory ? '/manager/equipment' : '/manager/rooms',
                 description: isLaboratory ? 'Calibração e status' : 'Ocupação e gestão'
+            },
+            {
+                name: '🎯 Funcionalidades Premium',
+                isSection: true
+            },
+            {
+                name: 'Telemedicina',
+                icon: Video,
+                path: '/manager/telemedicine',
+                description: 'Consultas online',
+                submenu: [
+                    { name: 'Consultas Agendadas', path: '/manager/telemedicine' },
+                    { name: 'Histórico', path: '/manager/telemedicine/history' },
+                    { name: 'Prescrições Digitais', path: '/manager/prescriptions' }
+                ]
+            },
+            {
+                name: 'Estoque Médico',
+                icon: Package,
+                path: '/manager/stock',
+                description: 'Medicamentos e materiais',
+                submenu: [
+                    { name: 'Inventário', path: '/manager/stock' },
+                    { name: 'Alertas de Reposição', path: '/manager/stock/alerts' },
+                    { name: 'Fornecedores', path: '/manager/suppliers' },
+                    { name: 'Relatórios de Uso', path: '/manager/stock/usage' }
+                ]
+            },
+            {
+                name: 'Inteligência AI',
+                icon: Brain,
+                path: '/manager/ai-insights',
+                description: 'Análises preditivas',
+                badge: 'BETA'
             },
             {
                 name: '💰 Gestão',
@@ -130,7 +320,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             { name: 'Meu Desempenho', icon: Activity, path: '/staff/performance' }
         ];
 
-        if (isOwner()) return ownerItems;
         if (isManager()) return managerItems;
         if (isStaff()) return staffItems;
         return [];
@@ -168,9 +357,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-black font-display tracking-tight bg-gradient-to-r from-white via-primary-200 to-indigo-200 bg-clip-text text-transparent leading-tight">
-                                    Antigravity
+                                    Clinica Digital
                                 </h1>
-                                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black mt-1">Intelligence Platform</p>
+                                <p className="text-[10px] font-black mt-1">Gestão de Clínicas</p>
                             </div>
                         </div>
                     </div>

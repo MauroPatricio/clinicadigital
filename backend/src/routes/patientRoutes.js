@@ -25,4 +25,19 @@ router.post('/:id/triage',
     patientController.setRiskClassification
 );
 
+// Timeline routes
+router.route('/:id/timeline')
+    .get(patientController.getPatientTimeline)
+    .post(authorize('admin', 'doctor', 'nurse'), patientController.addTimelineEvent);
+
+// Alert routes
+router.route('/:id/alerts')
+    .get(patientController.getPatientAlerts)
+    .post(authorize('admin', 'doctor', 'nurse'), patientController.createPatientAlert);
+
+router.patch('/:id/alerts/:alertId',
+    authorize('admin', 'doctor', 'nurse'),
+    patientController.updateAlertStatus
+);
+
 export default router;

@@ -30,6 +30,21 @@ import reportsRoutes from './routes/reportsRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
 import clinicManagementRoutes from './routes/clinicManagementRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+// Owner routes
+import ownerAnalyticsRoutes from './routes/ownerAnalyticsRoutes.js';
+import financeRoutes from './routes/financeRoutes.js';
+import premiumFinanceRoutes from './routes/premiumFinanceRoutes.js';
+import multiClinicRoutes from './routes/multiClinicRoutes.js';
+import advancedAnalyticsRoutes from './routes/advancedAnalyticsRoutes.js';
+// User & Permission Management
+import userRoutes from './routes/userRoutes.js';
+import permissionRoutes from './routes/permissionRoutes.js';
+import auditLogRoutes from './routes/auditLogRoutes.js';
+import ownerLabRoutes from './routes/ownerLabRoutes.js';
+
+// Batch 5: Pharmacy & Stock
+import stockRoutes from './routes/stockRoutes.js';
+import supplierRoutes from './routes/supplierRoutes.js';
 
 // Initialize Express app
 const app = express();
@@ -104,7 +119,13 @@ app.get('/health', (req, res) => {
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
+// Core authentication
 app.use('/api/auth', authRoutes);
+// User & Permission Management (Owner only)
+app.use('/api/users', userRoutes);
+app.use('/api/permissions', permissionRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
+// Standard routes
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/medical-records', medicalRecordRoutes);
 app.use('/api/billing', billingRoutes);
@@ -123,6 +144,17 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/clinics', clinicManagementRoutes);
 app.use('/api/analytics', analyticsRoutes);
+// Owner premium routes
+app.use('/api/owner/analytics', ownerAnalyticsRoutes);
+app.use('/api/owner/finance', financeRoutes); // Basic Finance
+app.use('/api/owner/finance/premium', premiumFinanceRoutes); // Premium Finance
+app.use('/api/owner/multi-clinic', multiClinicRoutes); // Multi-Clinic
+app.use('/api/owner/advanced-analytics', advancedAnalyticsRoutes);
+app.use('/api/owner/laboratory', ownerLabRoutes); // Laboratory Management
+
+// Batch 5: Pharmacy & Stock
+app.use('/api/stock', stockRoutes);
+app.use('/api/suppliers', supplierRoutes);
 
 
 // 404 handler

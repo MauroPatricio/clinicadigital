@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, List, Divider, Chip } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Text, Card, List, Button, IconButton, Chip, Searchbar, SegmentedButtons } from 'react-native-paper';
 import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { medicalRecordService } from '../services/appointmentService';
 
 export default function MedicalRecordsScreen() {
-    const [records, setRecords] = useState([]);
+    const [records, setRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -14,9 +16,10 @@ export default function MedicalRecordsScreen() {
     }, []);
 
     const loadRecords = async () => {
+        setLoading(true);
         try {
             const data = await medicalRecordService.getRecords();
-            setRecords(data.data);
+            setRecords(data.data || []);
         } catch (error) {
             console.error('Failed to load records:', error);
         } finally {
@@ -24,166 +27,259 @@ export default function MedicalRecordsScreen() {
         }
     };
 
-    const renderRecord = (record: any) => {
+    const renderTimelineItem = (record: any, index: number) => {
         const isExpanded = expandedId === record._id;
+        const date = new Date(record.createdAt);
 
         return (
-            <Card key={record._id} style={styles.card}>
-                <List.Accordion
-                    title={record.chiefComplaint}
-                    description={`Dr. ${record.doctor?.user?.profile?.lastName} - ${format(new Date(record.createdAt), 'PPP')}`}
-                    expanded={isExpanded}
-                    onPress={() => setExpandedId(isExpanded ? null : record._id)}
-                    left={props => <List.Icon {...props} icon="file-document" />}
-                >
-                    <Card.Content>
-                        <View style={styles.section}>
-                            <Text variant="labelLarge" style={styles.sectionTitle}>Diagnosis</Text>
-                            <Text variant="bodyMedium">{record.diagnosis}</Text>
-                        </View>
+            <View key={record._id} style={styles.timelineItem}>
+                {/* Left Side: Date & Dot */}
+                <View style={styles.timelineLeft}>
+                    <Text variant="titleSmall" style={styles.timelineDate}>
+                        {format(date, "dd MMM", { locale: pt })}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.timelineYear}>
+                        {format(date, "yyyy")}
+                    </Text>
+                    <View style={styles.timelineLine} />
+                    <View style={styles.timelineDot} />
+                </View>
 
-                        {record.vitalSigns && (
-                            <View style={styles.section}>
-                                <Text variant="labelLarge" style={styles.sectionTitle}>Vital Signs</Text>
-                                <View style={styles.vitalsGrid}>
-                                    <View style={styles.vitalItem}>
-                                        <Text variant="bodySmall" style={styles.vitalLabel}>Blood Pressure</Text>
-                                        <Text variant="bodyMedium">{record.vitalSigns.bloodPressure?.systolic}/{record.vitalSigns.bloodPressure?.diastolic} mmHg</Text>
-                                    </View>
-                                    <View style={styles.vitalItem}>
-                                        <Text variant="bodySmall" style={styles.vitalLabel}>Heart Rate</Text>
-                                        <Text variant="bodyMedium">{record.vitalSigns.heartRate} bpm</Text>
-                                    </View>
-                                    <View style={styles.vitalItem}>
-                                        <Text variant="bodySmall" style={styles.vitalLabel}>Temperature</Text>
-                                        <Text variant="bodyMedium">{record.vitalSigns.temperature}°C</Text>
-                                    </View>
-                                    <View style={styles.vitalItem}>
-                                        <Text variant="bodySmall" style={styles.vitalLabel}>Weight</Text>
-                                        <Text variant="bodyMedium">{record.vitalSigns.weight} kg</Text>
+                {/* Right Side: Content Card */}
+                <View style={styles.timelineRight}>
+                    <Card style={styles.card} onPress={() => setExpandedId(isExpanded ? null : record._id)}>
+                        <Card.Content>
+                            <View style={styles.recordHeader}>
+                                <View style={{ flex: 1 }}>
+                                    <Text variant="titleMedium" style={styles.complaint}>
+                                        {record.chiefComplaint || 'Consulta Geral'}
+                                    </Text>
+                                    <View style={styles.clinicInfo}>
+                                        <MaterialCommunityIcons name="hospital-building" size={14} color="#64748b" />
+                                        <Text variant="bodySmall" style={styles.grayText}>
+                                            {record.clinic?.name || 'Clínica Antigravity Central'}
+                                        </Text>
                                     </View>
                                 </View>
+                                <IconButton
+                                    icon={isExpanded ? "chevron-up" : "chevron-down"}
+                                    size={20}
+                                    onPress={() => setExpandedId(isExpanded ? null : record._id)}
+                                />
                             </View>
-                        )}
 
-                        {record.treatment && (
-                            <View style={styles.section}>
-                                <Text variant="labelLarge" style={styles.sectionTitle}>Treatment</Text>
-                                <Text variant="bodyMedium">{record.treatment}</Text>
-                            </View>
-                        )}
-
-                        {record.prescriptions && record.prescriptions.length > 0 && (
-                            <View style={styles.section}>
-                                <Text variant="labelLarge" style={styles.sectionTitle}>Prescriptions</Text>
-                                {record.prescriptions.map((rx: any, index: number) => (
-                                    <Chip key={index} style={styles.prescriptionChip} icon="pill">
-                                        {rx.prescriptionNumber}
-                                    </Chip>
-                                ))}
-                            </View>
-                        )}
-
-                        {record.followUp && (
-                            <View style={styles.section}>
-                                <Text variant="labelLarge" style={styles.sectionTitle}>Follow Up</Text>
-                                <Text variant="bodyMedium">
-                                    {format(new Date(record.followUp.date), 'PPP')}
-                                </Text>
-                                <Text variant="bodySmall" style={{ color: '#666', marginTop: 4 }}>
-                                    {record.followUp.instructions}
+                            <View style={styles.doctorInfo}>
+                                <MaterialCommunityIcons name="account-tie" size={14} color="#0ea5e9" />
+                                <Text variant="labelSmall" style={styles.doctorName}>
+                                    Dr. {record.doctor?.user?.profile?.firstName} {record.doctor?.user?.profile?.lastName}
                                 </Text>
                             </View>
-                        )}
-                    </Card.Content>
-                </List.Accordion>
-            </Card>
+
+                            {isExpanded && (
+                                <View style={styles.expandedContent}>
+                                    <View style={styles.divider} />
+
+                                    <View style={styles.section}>
+                                        <Text variant="labelMedium" style={styles.sectionTitle}>Diagnóstico</Text>
+                                        <Text variant="bodyMedium">{record.diagnosis}</Text>
+                                    </View>
+
+                                    {record.treatment && (
+                                        <View style={styles.section}>
+                                            <Text variant="labelMedium" style={styles.sectionTitle}>Tratamento</Text>
+                                            <Text variant="bodyMedium">{record.treatment}</Text>
+                                        </View>
+                                    )}
+
+                                    {record.prescriptions && record.prescriptions.length > 0 && (
+                                        <View style={styles.section}>
+                                            <Text variant="labelMedium" style={styles.sectionTitle}>Prescrições</Text>
+                                            <View style={styles.chipStack}>
+                                                {record.prescriptions.map((rx: any, idx: number) => (
+                                                    <Chip key={idx} icon="pill" style={styles.chip}>
+                                                        {rx.prescriptionNumber || 'RX-' + idx}
+                                                    </Chip>
+                                                ))}
+                                            </View>
+                                        </View>
+                                    )}
+
+                                    <View style={styles.cardActions}>
+                                        <Button icon="file-pdf-box" mode="outlined" style={styles.pdfButton}>
+                                            Baixar Relatório
+                                        </Button>
+                                    </View>
+                                </View>
+                            )}
+                        </Card.Content>
+                    </Card>
+                </View>
+            </View>
         );
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <View style={styles.header}>
-                <Text variant="headlineMedium">Medical Records</Text>
-                <Text variant="bodyMedium" style={styles.subtitle}>
-                    Your complete medical history
-                </Text>
+                <Text variant="headlineSmall" style={styles.title}>Histórico Clínico</Text>
+                <Text variant="bodyMedium" style={styles.subtitle}>Linha do tempo da sua saúde</Text>
             </View>
 
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <Text>Loading records...</Text>
-                </View>
-            ) : records.length === 0 ? (
-                <View style={styles.emptyState}>
-                    <Text variant="bodyLarge" style={styles.emptyText}>
-                        No medical records yet
-                    </Text>
-                </View>
-            ) : (
-                <View style={styles.recordsList}>
-                    {records.map(renderRecord)}
-                </View>
-            )}
-        </ScrollView>
+            <ScrollView
+                style={styles.content}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={loadRecords} />}
+            >
+                {records.length > 0 ? (
+                    <View style={styles.timeline}>
+                        {records.map((record, index) => renderTimelineItem(record, index))}
+                    </View>
+                ) : (
+                    !loading && (
+                        <View style={styles.emptyState}>
+                            <MaterialCommunityIcons name="timeline-alert-outline" size={64} color="#e2e8f0" />
+                            <Text variant="bodyLarge">Nenhum registro clínico encontrado</Text>
+                        </View>
+                    )
+                )}
+                <View style={{ height: 40 }} />
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f8fafc',
     },
     header: {
-        padding: 20,
+        padding: 24,
         backgroundColor: '#fff',
-        marginBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
+    },
+    title: {
+        fontWeight: 'bold',
+        color: '#0f172a',
     },
     subtitle: {
-        color: '#666',
-        marginTop: 4,
+        color: '#64748b',
     },
-    recordsList: {
+    content: {
+        flex: 1,
         padding: 20,
-        paddingTop: 0,
+    },
+    timeline: {
+        paddingTop: 10,
+    },
+    timelineItem: {
+        flexDirection: 'row',
+        marginBottom: 20,
+    },
+    timelineLeft: {
+        width: 60,
+        alignItems: 'center',
+        paddingTop: 5,
+    },
+    timelineDate: {
+        fontWeight: 'bold',
+        color: '#0ea5e9',
+    },
+    timelineYear: {
+        fontSize: 10,
+        color: '#94a3b8',
+    },
+    timelineDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#0ea5e9',
+        borderWidth: 2,
+        borderColor: '#fff',
+        position: 'absolute',
+        right: -6,
+        top: 25,
+        zIndex: 1,
+    },
+    timelineLine: {
+        position: 'absolute',
+        right: -1,
+        top: 35,
+        bottom: -20,
+        width: 2,
+        backgroundColor: '#e2e8f0',
+    },
+    timelineRight: {
+        flex: 1,
+        marginLeft: 20,
     },
     card: {
-        marginBottom: 10,
+        borderRadius: 15,
+        backgroundColor: '#fff',
+        elevation: 2,
+    },
+    recordHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    complaint: {
+        fontWeight: 'bold',
+        color: '#1e293b',
+    },
+    clinicInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        marginTop: 4,
+    },
+    grayText: {
+        color: '#64748b',
+        fontSize: 11,
+    },
+    doctorInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: 10,
+    },
+    doctorName: {
+        color: '#0ea5e9',
+    },
+    expandedContent: {
+        marginTop: 15,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#f1f5f9',
+        marginBottom: 15,
     },
     section: {
         marginBottom: 15,
     },
     sectionTitle: {
-        color: '#0ea5e9',
-        marginBottom: 8,
+        fontWeight: 'bold',
+        color: '#64748b',
+        marginBottom: 5,
+        fontSize: 12,
+        textTransform: 'uppercase',
     },
-    vitalsGrid: {
+    chipStack: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 15,
+        gap: 8,
     },
-    vitalItem: {
-        flex: 1,
-        minWidth: '45%',
+    chip: {
+        height: 32,
     },
-    vitalLabel: {
-        color: '#666',
-        marginBottom: 4,
+    pdfButton: {
+        marginTop: 10,
     },
-    prescriptionChip: {
-        marginRight: 10,
-        marginBottom: 5,
-    },
-    loadingContainer: {
-        padding: 40,
-        alignItems: 'center',
+    cardActions: {
+        marginTop: 10,
     },
     emptyState: {
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40,
-    },
-    emptyText: {
-        color: '#999',
+        paddingVertical: 100,
     },
 });

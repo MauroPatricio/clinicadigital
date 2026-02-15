@@ -28,6 +28,22 @@ export const labService = {
         const response = await api.post(`/lab/orders/${id}/notify`);
         return response.data;
     },
+
+    // Owner-specific methods
+    async getOwnerRequests(params = {}) {
+        const response = await api.get('/owner/laboratory/requests', { params });
+        return response.data;
+    },
+
+    async getOwnerResults(params = {}) {
+        const response = await api.get('/owner/laboratory/results', { params });
+        return response.data;
+    },
+
+    async getOwnerHistory(params = {}) {
+        const response = await api.get('/owner/laboratory/history', { params });
+        return response.data;
+    },
 };
 
 export default labService;

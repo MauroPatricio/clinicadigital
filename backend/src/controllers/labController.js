@@ -242,11 +242,276 @@ export const updateLabOrder = async (req, res, next) => {
     }
 };
 
+// @desc    Get lab requests for owner (all clinics or specific clinic)
+// @route   GET /api/owner/laboratory/requests
+// @access  Private (Owner)
+export const getLabRequestsForOwner = async (req, res, next) => {
+    try {
+        const { clinic, status, priority, search, page = 1, limit = 20 } = req.query;
+
+        let query = {};
+
+        // Filter by clinic if provided, otherwise get all clinics in organization
+        if (clinic) {
+            query.clinic = clinic;
+        }
+
+        if (status) query.status = status;
+        if (priority) query.priority = priority;
+
+        // Search by patient name or order number
+        if (search) {
+            query.$or = [
+                { orderNumber: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [orders, total] = await Promise.all([
+            LabOrder.find(query)
+                .populate('patient', 'patientNumber user')
+                .populate({
+                    path: 'patient',
+                    populate: { path: 'user', select: 'profile' }
+                })
+                .populate('doctor', 'user specialization')
+                .populate({
+                    path: 'doctor',
+                    populate: { path: 'user', select: 'profile' }
+                })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            LabOrder.countDocuments(query)
+        ]);
+
+        // Get stats for today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const stats = await LabOrder.aggregate([
+            {
+                $facet: {
+                    todayCount: [
+                        { $match: { createdAt: { $gte: today } } },
+                        { $count: 'count' }
+                    ],
+                    pendingCount: [
+                        { $match: { status: 'pending' } },
+                        { $count: 'count' }
+                    ],
+                    urgentCount: [
+                        { $match: { priority: 'urgent', status: { $ne: 'completed' } } },
+                        { $count: 'count' }
+                    ]
+                }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / limit),
+            stats: {
+                today: stats[0].todayCount[0]?.count || 0,
+                pending: stats[0].pendingCount[0]?.count || 0,
+                urgent: stats[0].urgentCount[0]?.count || 0
+            },
+            data: orders
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get lab results for owner (completed orders)
+// @route   GET /api/owner/laboratory/results
+// @access  Private (Owner)
+export const getLabResultsForOwner = async (req, res, next) => {
+    try {
+        const { clinic, startDate, endDate, examType, search, page = 1, limit = 20 } = req.query;
+
+        let query = { status: 'completed' };
+
+        if (clinic) query.clinic = clinic;
+
+        // Date range filter
+        if (startDate || endDate) {
+            query.resultsAvailableAt = {};
+            if (startDate) query.resultsAvailableAt.$gte = new Date(startDate);
+            if (endDate) query.resultsAvailableAt.$lte = new Date(endDate);
+        }
+
+        // Search by patient name or order number
+        if (search) {
+            query.$or = [
+                { orderNumber: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [orders, total] = await Promise.all([
+            LabOrder.find(query)
+                .populate('patient', 'patientNumber user')
+                .populate({
+                    path: 'patient',
+                    populate: { path: 'user', select: 'profile' }
+                })
+                .populate('doctor', 'user specialization')
+                .populate({
+                    path: 'doctor',
+                    populate: { path: 'user', select: 'profile' }
+                })
+                .sort({ resultsAvailableAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            LabOrder.countDocuments(query)
+        ]);
+
+        // Calculate average turnaround time (in hours)
+        const turnaroundStats = await LabOrder.aggregate([
+            { $match: { status: 'completed', resultsAvailableAt: { $exists: true } } },
+            {
+                $project: {
+                    turnaroundTime: {
+                        $divide: [
+                            { $subtract: ['$resultsAvailableAt', '$createdAt'] },
+                            3600000 // Convert to hours
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avgTurnaround: { $avg: '$turnaroundTime' },
+                    minTurnaround: { $min: '$turnaroundTime' },
+                    maxTurnaround: { $max: '$turnaroundTime' }
+                }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / limit),
+            stats: {
+                avgTurnaround: turnaroundStats[0]?.avgTurnaround?.toFixed(1) || 0,
+                minTurnaround: turnaroundStats[0]?.minTurnaround?.toFixed(1) || 0,
+                maxTurnaround: turnaroundStats[0]?.maxTurnaround?.toFixed(1) || 0
+            },
+            data: orders
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get lab history with analytics for owner
+// @route   GET /api/owner/laboratory/history
+// @access  Private (Owner)
+export const getLabHistoryForOwner = async (req, res, next) => {
+    try {
+        const { clinic, startDate, endDate, status, priority, page = 1, limit = 50 } = req.query;
+
+        let query = {};
+
+        if (clinic) query.clinic = clinic;
+        if (status) query.status = status;
+        if (priority) query.priority = priority;
+
+        // Date range filter (default to last 30 days if not specified)
+        const dateQuery = {};
+        if (startDate || endDate) {
+            if (startDate) dateQuery.$gte = new Date(startDate);
+            if (endDate) dateQuery.$lte = new Date(endDate);
+        } else {
+            // Default to last 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            dateQuery.$gte = thirtyDaysAgo;
+        }
+        query.createdAt = dateQuery;
+
+        const skip = (page - 1) * limit;
+
+        const [orders, total, analytics] = await Promise.all([
+            LabOrder.find(query)
+                .populate('patient', 'patientNumber user')
+                .populate({
+                    path: 'patient',
+                    populate: { path: 'user', select: 'profile' }
+                })
+                .populate('doctor', 'user specialization')
+                .populate({
+                    path: 'doctor',
+                    populate: { path: 'user', select: 'profile' }
+                })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            LabOrder.countDocuments(query),
+            LabOrder.aggregate([
+                { $match: query },
+                {
+                    $facet: {
+                        statusDistribution: [
+                            { $group: { _id: '$status', count: { $sum: 1 } } }
+                        ],
+                        priorityDistribution: [
+                            { $group: { _id: '$priority', count: { $sum: 1 } } }
+                        ],
+                        topExams: [
+                            { $unwind: '$exams' },
+                            { $group: { _id: '$exams.name', count: { $sum: 1 } } },
+                            { $sort: { count: -1 } },
+                            { $limit: 10 }
+                        ],
+                        monthlyTrend: [
+                            {
+                                $group: {
+                                    _id: {
+                                        year: { $year: '$createdAt' },
+                                        month: { $month: '$createdAt' }
+                                    },
+                                    count: { $sum: 1 }
+                                }
+                            },
+                            { $sort: { '_id.year': 1, '_id.month': 1 } }
+                        ]
+                    }
+                }
+            ])
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / limit),
+            analytics: analytics[0],
+            data: orders
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export default {
     createLabOrder,
     getLabOrders,
     getLabOrder,
     uploadLabResults,
     notifyPatient,
-    updateLabOrder
+    updateLabOrder,
+    getLabRequestsForOwner,
+    getLabResultsForOwner,
+    getLabHistoryForOwner
 };

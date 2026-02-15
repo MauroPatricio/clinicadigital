@@ -10,8 +10,8 @@ router.get('/:id', optionalAuth, doctorController.getDoctor);
 // Protect all routes
 router.use(protect);
 
-// Admin only routes
-router.post('/', authorize('admin'), doctorController.createDoctor);
+// Admin and Owner routes
+router.post('/', authorize('admin', 'owner'), doctorController.createDoctor);
 
 router.put('/:id',
     authorize('doctor', 'admin'),

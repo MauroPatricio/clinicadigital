@@ -1,6 +1,8 @@
 import Appointment from '../models/Appointment.js';
 import Doctor from '../models/Doctor.js';
 import Patient from '../models/Patient.js';
+import AppointmentQueue from '../models/AppointmentQueue.js';
+import AppointmentReminder from '../models/AppointmentReminder.js';
 import { AppError } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
 import { addMinutes, isBefore, isAfter, startOfDay, endOfDay } from 'date-fns';
@@ -293,11 +295,214 @@ export const confirmAppointment = async (req, res, next) => {
         }
 
         appointment.status = 'confirmed';
+        appointment.confirmedAt = new Date();
         await appointment.save();
 
         res.status(200).json({
             success: true,
             data: appointment
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get queue by date
+// @route   GET /api/appointments/queue/:date
+// @access  Private
+export const getQueueByDate = async (req, res, next) => {
+    try {
+        const { date } = req.params;
+        const { doctor, specialty } = req.query;
+
+        const targetDate = new Date(date);
+        const query = {
+            clinic: req.user.currentClinic,
+            date: {
+                $gte: startOfDay(targetDate),
+                $lte: endOfDay(targetDate)
+            }
+        };
+
+        if (doctor) query.doctor = doctor;
+        if (specialty) query.specialty = specialty;
+
+        const queues = await AppointmentQueue.find(query)
+            .populate({
+                path: 'queue.appointment',
+                populate: [
+                    { path: 'patient', populate: { path: 'user', select: 'profile' } },
+                    { path: 'doctor', populate: { path: 'user', select: 'profile' } }
+                ]
+            })
+            .populate('doctor', 'profile specialization')
+            .sort({ createdAt: 1 });
+
+        res.status(200).json({
+            success: true,
+            data: queues
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Update queue positions (drag-and-drop)
+// @route   PATCH /api/appointments/queue/:queueId
+// @access  Private
+export const updateQueuePositions = async (req, res, next) => {
+    try {
+        const { newOrder } = req.body; // Array of { appointmentId, position }
+
+        const queue = await AppointmentQueue.findById(req.params.queueId);
+        if (!queue) {
+            return next(new AppError('Queue not found', 404));
+        }
+
+        // Update positions
+        newOrder.forEach(({ appointmentId, position }) => {
+            const queueItem = queue.queue.find(q => q.appointment.toString() === appointmentId);
+            if (queueItem) {
+                queueItem.position = position;
+            }
+        });
+
+        // Sort queue by position
+        queue.queue.sort((a, b) => a.position - b.position);
+        await queue.save();
+
+        logger.info(`Queue positions updated for queue ${queue._id}`);
+
+        res.status(200).json({
+            success: true,
+            data: queue
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Call next patient in queue
+// @route   POST /api/appointments/queue/:queueId/next
+// @access  Private
+export const callNextPatient = async (req, res, next) => {
+    try {
+        const queue = await AppointmentQueue.findById(req.params.queueId);
+        if (!queue) {
+            return next(new AppError('Queue not found', 404));
+        }
+
+        const nextPatient = queue.getNextPatient();
+        if (!nextPatient) {
+            return next(new AppError('No patients waiting in queue', 400));
+        }
+
+        // Update status to called
+        nextPatient.status = 'called';
+        nextPatient.calledAt = new Date();
+        await queue.save();
+
+        // Update appointment status
+        await Appointment.findByIdAndUpdate(nextPatient.appointment, {
+            status: 'in-waiting-room',
+            checkedInAt: new Date()
+        });
+
+        logger.info(`Next patient called in queue ${queue._id}`);
+
+        res.status(200).json({
+            success: true,
+            data: nextPatient
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Send appointment confirmation
+// @route   POST /api/appointments/:id/send-confirmation
+// @access  Private
+export const sendConfirmation = async (req, res, next) => {
+    try {
+        const { method } = req.body; // 'sms', 'whatsapp', 'email'
+
+        const appointment = await Appointment.findById(req.params.id)
+            .populate('patient', 'user')
+            .populate({ path: 'patient', populate: { path: 'user', select: 'profile phone email' } });
+
+        if (!appointment) {
+            return next(new AppError('Appointment not found', 404));
+        }
+
+        // Create reminder
+        const reminder = await AppointmentReminder.create({
+            appointment: appointment._id,
+            patient: appointment.patient.user._id,
+            clinic: appointment.clinic,
+            reminderType: method,
+            scheduledFor: new Date(),
+            status: 'pending'
+        });
+
+        // TODO: Integrate with SMS/WhatsApp/Email service
+        // For now, just mark as sent
+        await reminder.markAsSent();
+
+        // Update appointment confirmation tracking
+        appointment.confirmationSent[method] = {
+            sent: true,
+            sentAt: new Date()
+        };
+        await appointment.save();
+
+        logger.info(`Confirmation sent via ${method} for appointment ${appointment.appointmentNumber}`);
+
+        res.status(200).json({
+            success: true,
+            message: `Confirmation sent via ${method}`,
+            data: reminder
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get predicted wait time
+// @route   GET /api/appointments/:id/wait-time
+// @access  Private
+export const getPredictedWaitTime = async (req, res, next) => {
+    try {
+        const appointment = await Appointment.findById(req.params.id);
+        if (!appointment) {
+            return next(new AppError('Appointment not found', 404));
+        }
+
+        // Find queue for this appointment
+        const queue = await AppointmentQueue.findOne({
+            'queue.appointment': appointment._id
+        });
+
+        if (!queue) {
+            return res.status(200).json({
+                success: true,
+                data: { waitTime: 0, message: 'Not in queue' }
+            });
+        }
+
+        const queueItem = queue.queue.find(q => q.appointment.toString() === appointment._id.toString());
+
+        // Calculate estimated wait time based on position and average consultation time
+        const patientsAhead = queue.queue.filter(q => q.position < queueItem.position && q.status === 'waiting').length;
+        const estimatedWaitMinutes = patientsAhead * queue.averageWaitTime;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                position: queueItem.position,
+                patientsAhead,
+                estimatedWaitMinutes,
+                estimatedTime: addMinutes(new Date(), estimatedWaitMinutes)
+            }
         });
     } catch (error) {
         next(error);

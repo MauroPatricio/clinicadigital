@@ -14,6 +14,12 @@ import AppointmentsScreen from '../screens/AppointmentsScreen';
 import MedicalRecordsScreen from '../screens/MedicalRecordsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import LabResultsScreen from '../screens/LabResultsScreen';
+import PaymentScreen from '../screens/PaymentScreen';
+import HealthAssistantScreen from '../screens/HealthAssistantScreen';
+import VitalsMonitorScreen from '../screens/VitalsMonitorScreen';
+import SecureChatScreen from '@/screens/SecureChatScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -81,7 +87,10 @@ export default function AppNavigator() {
         <NavigationContainer>
             <Stack.Navigator>
                 {!isAuthenticated ? (
-                    <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+                    <>
+                        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+                        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+                    </>
                 ) : (
                     <>
                         <Stack.Screen name="Main" component={TabNavigator} options={{ headerShown: false }} />
@@ -92,6 +101,31 @@ export default function AppNavigator() {
                                 title: 'Book Appointment',
                                 headerBackTitle: 'Back'
                             }}
+                        />
+                        <Stack.Screen
+                            name="Exams"
+                            component={LabResultsScreen}
+                            options={{ title: 'Exames Laboratoriais' }}
+                        />
+                        <Stack.Screen
+                            name="Payments"
+                            component={PaymentScreen}
+                            options={{ title: 'Pagamentos & Fatturação' }}
+                        />
+                        <Stack.Screen
+                            name="Assistant"
+                            component={HealthAssistantScreen}
+                            options={{ title: 'Assistente Antigravity' }}
+                        />
+                        <Stack.Screen
+                            name="Vitals"
+                            component={VitalsMonitorScreen}
+                            options={{ title: 'Monitorização de Saúde' }}
+                        />
+                        <Stack.Screen
+                            name="Chat"
+                            component={SecureChatScreen}
+                            options={{ title: 'Conversar com a Clínica' }}
                         />
                     </>
                 )}

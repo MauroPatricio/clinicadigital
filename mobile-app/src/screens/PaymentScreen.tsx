@@ -1,217 +1,367 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, Button, RadioButton, TextInput, Divider } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, Image, TouchableOpacity } from 'react-native';
+import { Text, Card, Button, List, IconButton, Modal, Portal, TextInput, Chip } from 'react-native-paper';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import toast from 'react-hot-toast';
+import paymentService from '../services/paymentService';
 
-interface PaymentScreenProps {
-    route: any;
-    navigation: any;
-}
-
-export default function PaymentScreen({ route, navigation }: PaymentScreenProps) {
-    const { invoice } = route.params;
-    const [paymentMethod, setPaymentMethod] = useState('mpesa');
+export default function PaymentScreen() {
+    const [invoices, setInvoices] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [payingInvoice, setPayingInvoice] = useState<any>(null);
+    const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'emola'>('mpesa');
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [cardNumber, setCardNumber] = useState('');
-    const [cardExpiry, setCardExpiry] = useState('');
-    const [cardCVV, setCardCVV] = useState('');
-    const [processing, setProcessing] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [successModal, setSuccessModal] = useState(false);
 
-    const handlePayment = async () => {
-        setProcessing(true);
+    useEffect(() => {
+        loadInvoices();
+    }, []);
 
+    const loadInvoices = async () => {
+        setLoading(true);
         try {
-            if (paymentMethod === 'mpesa') {
-                // Simulate M-Pesa payment
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                toast.success('Payment request sent to ' + phoneNumber);
-            } else {
-                // Simulate card payment
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                toast.success('Payment processed successfully');
-            }
-
-            navigation.goBack();
+            const data = await paymentService.getInvoices();
+            setInvoices(data.data || []);
         } catch (error) {
-            toast.error('Payment failed. Please try again.');
+            console.error('Error loading invoices:', error);
         } finally {
-            setProcessing(false);
+            setLoading(false);
         }
     };
 
-    return (
-        <ScrollView style={styles.container}>
-            <Card style={styles.invoiceCard}>
-                <Card.Content>
-                    <Text variant="titleMedium" style={{ marginBottom: 10 }}>
-                        Invoice Summary
-                    </Text>
-                    <View style={styles.summaryRow}>
-                        <Text variant="bodyMedium">Invoice Number:</Text>
-                        <Text variant="bodyMedium" style={{ fontWeight: 'bold' }}>
-                            {invoice?.billNumber}
-                        </Text>
-                    </View>
-                    <View style={styles.summaryRow}>
-                        <Text variant="bodyMedium">Amount Due:</Text>
-                        <Text variant="titleLarge" style={{ fontWeight: 'bold', color: '#0ea5e9' }}>
-                            {invoice?.total?.toLocaleString()} MT
-                        </Text>
-                    </View>
-                </Card.Content>
-            </Card>
+    const handlePayment = async () => {
+        if (!phoneNumber) return;
+        setPaymentLoading(true);
+        try {
+            const service = paymentMethod === 'mpesa'
+                ? paymentService.processMpesaPayment
+                : paymentService.processEmolaPayment;
 
-            <Card style={styles.card}>
-                <Card.Content>
-                    <Text variant="titleMedium" style={{ marginBottom: 15 }}>
-                        Select Payment Method
-                    </Text>
+            await service(payingInvoice.id, phoneNumber);
+            setPayingInvoice(null);
+            setSuccessModal(true);
+            loadInvoices(); // Reload to show updated status
+        } catch (error) {
+            console.error('Payment failed:', error);
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
 
-                    <RadioButton.Group
-                        onValueChange={setPaymentMethod}
-                        value={paymentMethod}
-                    >
-                        {/* M-Pesa */}
-                        <View style={styles.paymentOption}>
-                            <RadioButton value="mpesa" />
-                            <View style={{ flex: 1, marginLeft: 10 }}>
-                                <View style={styles.paymentHeader}>
-                                    <MaterialCommunityIcons name="cellphone" size={24} color="#10b981" />
-                                    <Text variant="titleMedium" style={{ marginLeft: 10 }}>
-                                        M-Pesa
-                                    </Text>
-                                </View>
-                                <Text variant="bodySmall" style={{ color: '#666', marginTop: 4 }}>
-                                    Pay with your M-Pesa mobile money
-                                </Text>
-                            </View>
-                        </View>
-
-                        <Divider style={{ marginVertical: 15 }} />
-
-                        {/* Card Payment */}
-                        <View style={styles.paymentOption}>
-                            <RadioButton value="card" />
-                            <View style={{ flex: 1, marginLeft: 10 }}>
-                                <View style={styles.paymentHeader}>
-                                    <MaterialCommunityIcons name="credit-card" size={24} color="#3b82f6" />
-                                    <Text variant="titleMedium" style={{ marginLeft: 10 }}>
-                                        Credit/Debit Card
-                                    </Text>
-                                </View>
-                                <Text variant="bodySmall" style={{ color: '#666', marginTop: 4 }}>
-                                    Pay with Visa or Mastercard
-                                </Text>
-                            </View>
-                        </View>
-                    </RadioButton.Group>
-                </Card.Content>
-            </Card>
-
-            {/* Payment Details */}
-            <Card style={styles.card}>
-                <Card.Content>
-                    <Text variant="titleMedium" style={{ marginBottom: 15 }}>
-                        Payment Details
-                    </Text>
-
-                    {paymentMethod === 'mpesa' ? (
-                        <TextInput
-                            label="M-Pesa Phone Number"
-                            value={phoneNumber}
-                            onChangeText={setPhoneNumber}
-                            mode="outlined"
-                            placeholder="+258 84 123 4567"
-                            keyboardType="phone-pad"
-                            left={<TextInput.Icon icon="cellphone" />}
+    const renderInvoice = (invoice: any) => (
+        <Card key={invoice.id} style={styles.invoiceCard}>
+            <Card.Content>
+                <View style={styles.invoiceHeader}>
+                    <View style={styles.iconContainer}>
+                        <MaterialCommunityIcons
+                            name={invoice.status === 'paid' ? 'check-decagram' : 'clock-outline'}
+                            size={24}
+                            color={invoice.status === 'paid' ? '#22c55e' : '#f97316'}
                         />
-                    ) : (
-                        <>
-                            <TextInput
-                                label="Card Number"
-                                value={cardNumber}
-                                onChangeText={setCardNumber}
-                                mode="outlined"
-                                placeholder="1234 5678 9012 3456"
-                                keyboardType="numeric"
-                                maxLength={19}
-                                left={<TextInput.Icon icon="credit-card" />}
-                                style={{ marginBottom: 15 }}
-                            />
-                            <View style={styles.cardRow}>
-                                <TextInput
-                                    label="Expiry (MM/YY)"
-                                    value={cardExpiry}
-                                    onChangeText={setCardExpiry}
-                                    mode="outlined"
-                                    placeholder="12/25"
-                                    maxLength={5}
-                                    style={{ flex: 1, marginRight: 10 }}
-                                />
-                                <TextInput
-                                    label="CVV"
-                                    value={cardCVV}
-                                    onChangeText={setCardCVV}
-                                    mode="outlined"
-                                    placeholder="123"
-                                    keyboardType="numeric"
-                                    maxLength={3}
-                                    secureTextEntry
-                                    style={{ flex: 1 }}
-                                />
-                            </View>
-                        </>
-                    )}
-                </Card.Content>
-            </Card>
+                    </View>
+                    <View style={styles.invoiceInfo}>
+                        <Text variant="titleMedium" style={styles.invoiceTitle}>{invoice.description}</Text>
+                        <Text variant="bodySmall" style={styles.invoiceDate}>
+                            {format(new Date(invoice.date), "dd/MM/yyyy")} • {invoice.clinic}
+                        </Text>
+                    </View>
+                    <Text variant="titleLarge" style={styles.invoiceAmount}>
+                        {invoice.amount.toLocaleString('pt-PT', { style: 'currency', currency: 'MZN' })}
+                    </Text>
+                </View>
 
+                {invoice.status === 'pending' && (
+                    <Button
+                        mode="contained"
+                        onPress={() => setPayingInvoice(invoice)}
+                        style={styles.payButton}
+                        icon="credit-card-outline"
+                    >
+                        Pagar Agora
+                    </Button>
+                )}
+            </Card.Content>
+        </Card>
+    );
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.summaryBar}>
+                <View style={styles.summaryItem}>
+                    <Text variant="labelSmall" style={styles.summaryLabel}>Total Pendente</Text>
+                    <Text variant="headlineSmall" style={styles.summaryValue}>
+                        {(invoices.filter(i => i.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0))
+                            .toLocaleString('pt-PT', { style: 'currency', currency: 'MZN' })}
+                    </Text>
+                </View>
+                <View style={styles.verticalDivider} />
+                <View style={styles.summaryItem}>
+                    <Text variant="labelSmall" style={styles.summaryLabel}>Carteira Digital</Text>
+                    <Text variant="headlineSmall" style={[styles.summaryValue, { color: '#22c55e' }]}>
+                        5.450,00 MT
+                    </Text>
+                </View>
+            </View>
             <Button
-                mode="contained"
-                onPress={handlePayment}
-                loading={processing}
-                disabled={processing || (paymentMethod === 'mpesa' ? !phoneNumber : !cardNumber)}
-                style={styles.payButton}
-                contentStyle={{ paddingVertical: 8 }}
+                mode="text"
+                icon="plus"
+                onPress={() => console.log('Top up')}
+                style={styles.topUpBtn}
             >
-                Pay {invoice?.total?.toLocaleString()} MT
+                Recarregar Carteira
             </Button>
-        </ScrollView>
+
+            <ScrollView
+                style={styles.content}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={loadInvoices} />}
+            >
+                <Text variant="titleMedium" style={styles.sectionTitle}>Histórico de Faturas</Text>
+                {invoices.length > 0 ? (
+                    invoices.map(renderInvoice)
+                ) : (
+                    <View style={styles.emptyState}>
+                        <MaterialCommunityIcons name="receipt" size={64} color="#e2e8f0" />
+                        <Text variant="bodyLarge">Sem faturas registradas</Text>
+                    </View>
+                )}
+                <View style={{ height: 40 }} />
+            </ScrollView>
+
+            {/* Payment Modal */}
+            <Portal>
+                <Modal
+                    visible={!!payingInvoice}
+                    onDismiss={() => setPayingInvoice(null)}
+                    contentContainerStyle={styles.modalContent}
+                >
+                    <Card style={styles.modalCard}>
+                        <Card.Content>
+                            <Text variant="headlineSmall" style={styles.modalTitle}>Checkout</Text>
+                            <Text variant="bodyMedium" style={styles.modalDesc}>
+                                Selecione o método de pagamento para {payingInvoice?.description}
+                            </Text>
+
+                            <View style={styles.methodSelector}>
+                                <TouchableOpacity
+                                    style={[styles.methodItem, paymentMethod === 'mpesa' && styles.selectedMethod]}
+                                    onPress={() => setPaymentMethod('mpesa')}
+                                >
+                                    <View style={[styles.methodIcon, { backgroundColor: '#af1c24' }]}>
+                                        <Text style={styles.methodText}>M</Text>
+                                    </View>
+                                    <Text variant="labelLarge">M-Pesa</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.methodItem, paymentMethod === 'emola' && styles.selectedMethod]}
+                                    onPress={() => setPaymentMethod('emola')}
+                                >
+                                    <View style={[styles.methodIcon, { backgroundColor: '#f97316' }]}>
+                                        <Text style={styles.methodText}>e</Text>
+                                    </View>
+                                    <Text variant="labelLarge">e-Mola</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <TextInput
+                                label="Número de Telefone (84/85/82/87)"
+                                value={phoneNumber}
+                                onChangeText={setPhoneNumber}
+                                keyboardType="phone-pad"
+                                mode="outlined"
+                                style={styles.modalInput}
+                                maxLength={9}
+                            />
+
+                            <View style={styles.modalFooter}>
+                                <Button mode="text" onPress={() => setPayingInvoice(null)}>Cancelar</Button>
+                                <Button
+                                    mode="contained"
+                                    onPress={handlePayment}
+                                    loading={paymentLoading}
+                                    style={styles.modalPayButton}
+                                >
+                                    Confirmar Pagamento
+                                </Button>
+                            </View>
+                        </Card.Content>
+                    </Card>
+                </Modal>
+
+                <Modal
+                    visible={successModal}
+                    onDismiss={() => setSuccessModal(false)}
+                    contentContainerStyle={styles.modalContent}
+                >
+                    <Card style={styles.successCard}>
+                        <Card.Content style={styles.successContent}>
+                            <MaterialCommunityIcons name="check-circle" size={80} color="#22c55e" />
+                            <Text variant="headlineSmall" style={styles.successTitle}>Solicitação Enviada!</Text>
+                            <Text variant="bodyMedium" style={styles.successText}>
+                                Verifique o seu telefone para confirmar a transação digitando o seu PIN.
+                            </Text>
+                            <Button mode="contained" onPress={() => setSuccessModal(false)}>Ok, entendi</Button>
+                        </Card.Content>
+                    </Card>
+                </Modal>
+            </Portal>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f8fafc',
+    },
+    summaryBar: {
+        padding: 24,
+        paddingBottom: 15,
+        backgroundColor: '#fff',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+    },
+    verticalDivider: {
+        width: 1,
+        height: 40,
+        backgroundColor: '#e2e8f0',
+    },
+    topUpBtn: {
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
+        borderRadius: 0,
+    },
+    summaryItem: {
+        alignItems: 'center',
+    },
+    summaryLabel: {
+        color: '#64748b',
+        textTransform: 'uppercase',
+    },
+    summaryValue: {
+        fontWeight: 'bold',
+        color: '#0f172a',
+        marginTop: 4,
+    },
+    content: {
+        padding: 20,
+    },
+    sectionTitle: {
+        marginBottom: 15,
+        fontWeight: 'bold',
+        color: '#334155',
     },
     invoiceCard: {
-        margin: 20,
-        marginBottom: 10,
+        marginBottom: 15,
+        borderRadius: 15,
+        elevation: 2,
     },
-    card: {
-        margin: 20,
-        marginTop: 10,
-    },
-    summaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginVertical: 5,
-    },
-    paymentOption: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-    },
-    paymentHeader: {
+    invoiceHeader: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 15,
     },
-    cardRow: {
-        flexDirection: 'row',
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#f1f5f9',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    invoiceInfo: {
+        flex: 1,
+        marginLeft: 12,
+    },
+    invoiceTitle: {
+        fontWeight: 'bold',
+    },
+    invoiceDate: {
+        color: '#64748b',
+    },
+    invoiceAmount: {
+        fontWeight: 'bold',
+        color: '#0f172a',
     },
     payButton: {
-        margin: 20,
-        marginTop: 10,
+        borderRadius: 10,
+    },
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 100,
+    },
+    modalContent: {
+        padding: 20,
+    },
+    modalCard: {
+        borderRadius: 20,
+    },
+    modalTitle: {
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    modalDesc: {
+        color: '#64748b',
+        marginBottom: 20,
+    },
+    methodSelector: {
+        flexDirection: 'row',
+        gap: 15,
+        marginBottom: 20,
+    },
+    methodItem: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 15,
+        padding: 15,
+        alignItems: 'center',
+        gap: 8,
+    },
+    selectedMethod: {
+        borderColor: '#0ea5e9',
+        backgroundColor: '#f0f9ff',
+    },
+    methodIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    methodText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 20,
+    },
+    modalInput: {
+        marginBottom: 20,
+    },
+    modalFooter: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 10,
+    },
+    modalPayButton: {
+        flex: 1,
+    },
+    successCard: {
+        borderRadius: 20,
+    },
+    successContent: {
+        alignItems: 'center',
+        padding: 20,
+        gap: 15,
+    },
+    successTitle: {
+        fontWeight: 'bold',
+    },
+    successText: {
+        textAlign: 'center',
+        color: '#64748b',
+        lineHeight: 20,
     },
 });

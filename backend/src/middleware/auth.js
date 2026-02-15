@@ -301,9 +301,18 @@ export const authorize = (...roles) => {
             throw new Error('Not authorized');
         }
 
-        if (!roles.includes(req.user.role)) {
+        // Allow system admins to access all protected routes
+        if (req.user.role === 'admin' || req.user.roleType === 'admin') {
+            return next();
+        }
+
+        // Check if either legacy role or new roleType allows access
+        const hasPermission = roles.includes(req.user.role) || roles.includes(req.user.roleType);
+
+        if (!hasPermission) {
+            const userRole = req.user.roleType || req.user.role;
             res.status(403);
-            throw new Error(`User role ${req.user.role} is not authorized to access this route`);
+            throw new Error(`User role ${userRole} is not authorized to access this route`);
         }
 
         next();

@@ -27,7 +27,7 @@ const MainLayout = () => {
         if (path.includes('/appointments')) return t('nav.appointments');
         if (path.includes('/reports')) return t('nav.reports');
         if (path.includes('/schedule')) return t('nav.mySchedule');
-        return t('common.appName', 'Clinic Digital');
+        return t('common.appName', 'Clinica Digital');
     };
 
     return (

@@ -101,7 +101,7 @@ const PatientsPage = () => {
                                     </tr>
                                 ) : (
                                     patients.map((patient) => (
-                                        <tr key={patient._id} className="hover:bg-gray-50">
+                                        <tr key={patient._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/manager/patients/${patient._id}`}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -142,7 +142,13 @@ const PatientsPage = () => {
                                                 {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button className="text-primary-600 hover:text-primary-900">
+                                                <button
+                                                    className="text-primary-600 hover:text-primary-900"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.location.href = `/manager/patients/${patient._id}`;
+                                                    }}
+                                                >
                                                     <Eye className="w-5 h-5" />
                                                 </button>
                                             </td>

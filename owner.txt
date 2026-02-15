@@ -1,0 +1,207 @@
+1. Dashboard Executivo
+
+Visão geral da clínica em tempo real.
+
+Deve mostrar:
+
+✅ Total de pacientes atendidos
+✅ Receita diária / mensal / anual
+✅ Consultas agendadas
+✅ Taxa de ocupação dos médicos
+✅ Serviços mais vendidos
+✅ Despesas operacionais
+✅ Lucro estimado
+✅ Alertas importantes
+✅ Indicadores financeiros (KPIs)
+
+👥 2. Gestão de Utilizadores e Permissões
+
+Controle total da equipa.
+
+Deve permitir:
+
+Criar médicos
+
+Criar recepcionistas
+
+Criar técnicos laboratoriais
+
+Criar gestores financeiros
+
+Definir permissões e acessos
+
+Bloquear utilizadores
+
+Auditoria de actividades
+
+🧑‍⚕️ 3. Gestão de Médicos e Especialidades
+
+✅ Cadastro de médicos
+✅ Horários e escalas
+✅ Especialidades médicas
+✅ Desempenho dos médicos
+✅ Produção financeira por médico
+
+🩺 4. Gestão de Pacientes
+
+✅ Cadastro completo
+✅ Histórico clínico
+✅ Histórico financeiro
+✅ Documentos e exames anexados
+✅ Histórico de consultas
+✅ Alertas médicos
+
+📅 5. Gestão de Agendamentos
+
+✅ Agenda geral da clínica
+✅ Agenda por médico
+✅ Confirmação automática
+✅ Reagendamento
+✅ Lista de espera
+✅ Notificações SMS/WhatsApp
+
+💰 6. Gestão Financeira Premium
+
+Parte extremamente importante para o owner.
+
+Receitas
+
+Pagamentos de consultas
+
+Serviços e exames
+
+Convênios / seguradoras
+
+Despesas
+
+Salários
+
+Compras
+
+Custos operacionais
+
+Fornecedores
+
+Extras
+
+✅ Fluxo de caixa
+✅ Relatórios financeiros avançados
+✅ Previsão financeira
+✅ Controlo de comissões médicas
+
+🧪 7. Gestão Laboratorial
+
+Se a clínica possuir laboratório.
+
+✅ Solicitação de exames
+✅ Resultados laboratoriais
+✅ Integração com pacientes
+✅ Aprovação de resultados
+✅ Histórico de exames
+
+💊 8. Gestão de Farmácia
+
+✅ Controle de medicamentos
+✅ Estoque
+✅ Validade de medicamentos
+✅ Compras e fornecedores
+✅ Vendas internas
+✅ Alertas de stock mínimo
+
+📦 9. Gestão de Stock Geral
+
+✅ Materiais médicos
+✅ Equipamentos
+✅ Inventário
+✅ Movimentação de produtos
+✅ Alertas automáticos
+
+📑 10. Relatórios e Business Intelligence
+
+Área extremamente premium.
+
+Deve permitir:
+
+📊 Relatórios financeiros
+📊 Relatórios clínicos
+📊 Desempenho dos médicos
+📊 Serviços mais rentáveis
+📊 Crescimento da clínica
+📊 Taxa de retorno de pacientes
+📊 Análise de produtividade
+
+🧾 11. Gestão de Convênios e Seguradoras
+
+✅ Cadastro de seguradoras
+✅ Planos de cobertura
+✅ Facturação por convênio
+✅ Controle de pagamentos pendentes
+
+🏢 12. Gestão Multiclínica (Premium avançado)
+
+Se o dono possuir várias clínicas:
+
+✅ Gestão de várias unidades
+✅ Comparação entre filiais
+✅ Relatórios consolidados
+
+⚙️ 13. Configurações Gerais do Sistema
+
+Owner normalmente controla:
+
+Serviços oferecidos
+
+Preçários
+
+Impostos
+
+Métodos de pagamento
+
+Templates de relatórios
+
+Personalização do sistema
+
+Integrações externas
+
+🔐 14. Segurança e Auditoria
+
+✅ Logs de acesso
+✅ Histórico de alterações
+✅ Monitoramento de actividades
+✅ Backup automático
+
+📣 15. Marketing e Relacionamento com Pacientes (Muito Premium)
+
+Poucos sistemas têm isso e é um grande diferencial.
+
+✅ Envio de campanhas
+✅ Lembretes automáticos
+✅ Fidelização de pacientes
+✅ Avaliações e feedback
+
+⭐ Funcionalidades Ultra Premium (Diferencial Competitivo)
+
+👉 Inteligência Artificial para análise clínica
+👉 Telemedicina
+👉 Aplicativo do paciente
+👉 Portal do médico
+👉 Integração com equipamentos médicos
+👉 Assinatura digital
+👉 Dashboards preditivos
+
+📌 Estrutura Recomendada do Menu para OWNER
+🏠 Dashboard
+👥 Utilizadores
+🧑‍⚕️ Médicos
+🩺 Pacientes
+📅 Agendamentos
+💰 Financeiro
+🧪 Laboratório
+💊 Farmácia
+📦 Stock
+📑 Relatórios
+🧾 Convênios
+🏢 Unidades / Filiais
+📣 Marketing
+⚙️ Configurações
+🔐 Auditoria

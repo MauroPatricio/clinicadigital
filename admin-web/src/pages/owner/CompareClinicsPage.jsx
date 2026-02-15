@@ -19,7 +19,7 @@ const CompareClinic = () => {
     const loadComparison = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/clinics/compare', {
+            const response = await api.get('/owner/multi-clinic/compare', {
                 params: dateRange
             });
             setComparison(response.data.data);
@@ -114,9 +114,9 @@ const CompareClinic = () => {
                                 <tr key={clinic.clinicId} className="border-b border-gray-100 hover:bg-gray-50">
                                     <td className="py-4 px-4">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx === 0 ? 'bg-yellow-100 text-yellow-800' :
-                                                idx === 1 ? 'bg-gray-100 text-gray-800' :
-                                                    idx === 2 ? 'bg-orange-100 text-orange-800' :
-                                                        'bg-blue-50 text-blue-700'
+                                            idx === 1 ? 'bg-gray-100 text-gray-800' :
+                                                idx === 2 ? 'bg-orange-100 text-orange-800' :
+                                                    'bg-blue-50 text-blue-700'
                                             }`}>
                                             {idx + 1}º
                                         </div>
@@ -149,10 +149,10 @@ const CompareClinic = () => {
                                     </td>
                                     <td className="py-4 px-4 text-center">
                                         <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${parseFloat(clinic.completionRate) >= 80
-                                                ? 'bg-green-100 text-green-800'
-                                                : parseFloat(clinic.completionRate) >= 60
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-red-100 text-red-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : parseFloat(clinic.completionRate) >= 60
+                                                ? 'bg-yellow-100 text-yellow-800'
+                                                : 'bg-red-100 text-red-800'
                                             }`}>
                                             {parseFloat(clinic.completionRate) >= 80 ? (
                                                 <TrendingUp className="w-3 h-3" />
