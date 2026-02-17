@@ -72,7 +72,10 @@ connectDB().catch(err => {
 });
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
 
 // CORS
 app.use(cors({
