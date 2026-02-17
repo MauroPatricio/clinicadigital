@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Status - Clínica Digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #10b981;
+            --text-main: #ffffff;
+            --text-secondary: #94a3b8;
+            --badge-bg: #334155;
+            --badge-text: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glow effect check */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.1);
+            pointer-events: none;
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge.port {
+            color: #818cf8;
+            /* Light indigo for port to differentiate or stick to green? Image shows both similar dark bg, different text maybe? 
+               In the image: 
+               Status: OK (Green text)
+               Porta: 5000 (Purple/Pink text)
+            */
+            color: #c084fc;
+            /* Purple-ish */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="icon">🚀</div>
+            <h1 class="title">API Conectada com Sucesso</h1>
+            <p class="description">
+                Você conseguiu chegar ao servidor. Este endpoint é apenas para fins de verificação.
+            </p>
+
+            <div class="badges">
+                <div class="badge">
+                    Status: OK
+                </div>
+                <div class="badge port">
+                    Porta: <span id="port-number">...</span>
+                </div>
+            </div>
+
+            <!-- Hidden details that might be useful for debugging but keeping clean UI -->
+            <div style="display: none;" id="debug-info"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simple script to set the port if we can get it, or default
+        // Since this is a static HTML served by Express, we can't easily inject without template engine.
+        // But we can fetch it from the API endpoint I created earlier!
+
+        async function fetchInfo() {
+            try {
+                // Determine port from window location if running locally
+                const port = window.location.port || '80';
+                document.getElementById('port-number').textContent = port;
+
+                // Optional: Check actual API health
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                if (data.success) {
+                    // We could update status text if needed, but "Status: OK" is fine
+                }
+            } catch (e) {
+                console.error("Could not fetch status", e);
+                document.getElementById('port-number').textContent = window.location.port;
+            }
+        }
+
+        fetchInfo();
+    </script>
+</body>
+
+</html>

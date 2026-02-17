@@ -41,6 +41,7 @@ import userRoutes from './routes/userRoutes.js';
 import permissionRoutes from './routes/permissionRoutes.js';
 import auditLogRoutes from './routes/auditLogRoutes.js';
 import ownerLabRoutes from './routes/ownerLabRoutes.js';
+import statusRoutes from './routes/statusRoutes.js';
 
 // Batch 5: Pharmacy & Stock
 import stockRoutes from './routes/stockRoutes.js';
@@ -115,6 +116,12 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString()
     });
 });
+
+// Status Page Route (HTML & API)
+app.use('/', statusRoutes);
+
+// Status Page Routes
+// Moved import to top and app.use to appropriate location
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
