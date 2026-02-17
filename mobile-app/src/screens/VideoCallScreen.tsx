@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, IconButton } from 'react-native-paper';
-import { AgoraVideoPlayer, createAgoraRtcEngine } from 'react-native-agora';
+import { createAgoraRtcEngine, RtcSurfaceView, ChannelProfileType, ClientRoleType } from 'react-native-agora';
 
 interface VideoCallScreenProps {
     route: any;
@@ -104,11 +104,10 @@ export default function VideoCallScreen({ route, navigation }: VideoCallScreenPr
                     {/* Remote video */}
                     <View style={styles.remoteVideo}>
                         {remoteUid ? (
-                            <View style={styles.videoPlaceholder}>
-                                <Text style={styles.placeholderText}>
-                                    Doctor's Video
-                                </Text>
-                            </View>
+                            <RtcSurfaceView
+                                canvas={{ uid: remoteUid }}
+                                style={styles.videoPlaceholder}
+                            />
                         ) : (
                             <View style={styles.waitingContainer}>
                                 <Text variant="titleMedium" style={{ color: '#fff' }}>
@@ -120,9 +119,11 @@ export default function VideoCallScreen({ route, navigation }: VideoCallScreenPr
 
                     {/* Local video preview */}
                     <View style={styles.localVideo}>
-                        <View style={styles.localVideoPlaceholder}>
-                            <Text style={styles.placeholderText}>You</Text>
-                        </View>
+                        <RtcSurfaceView
+                            canvas={{ uid: 0 }}
+                            style={styles.localVideoPlaceholder}
+                            zOrderMediaOverlay={true}
+                        />
                     </View>
 
                     {/* Controls */}

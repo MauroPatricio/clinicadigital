@@ -114,7 +114,7 @@ export default function AppointmentsScreen({ navigation }: any) {
             <FlatList
                 data={appointments}
                 renderItem={renderAppointment}
-                keyExtractor={(item) => item._id}
+                keyExtractor={(item: any) => item._id || item.id}
                 refreshing={loading}
                 onRefresh={loadAppointments}
                 contentContainerStyle={styles.listContent}

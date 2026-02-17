@@ -13,12 +13,19 @@ const errorHandler = (err, req, res, next) => {
     let error = { ...err };
     error.message = err.message;
 
-    // Log error
-    logger.error(`${err.name}: ${err.message}`, {
-        stack: err.stack,
-        url: req.originalUrl,
-        method: req.method
-    });
+    // Log error - Downgrade TokenExpiredError to warning
+    if (err.name === 'TokenExpiredError') {
+        logger.warn(`${err.name}: ${err.message}`, {
+            url: req.originalUrl,
+            method: req.method
+        });
+    } else {
+        logger.error(`${err.name}: ${err.message}`, {
+            stack: err.stack,
+            url: req.originalUrl,
+            method: req.method
+        });
+    }
 
     // Mongoose bad ObjectId
     if (err.name === 'CastError') {

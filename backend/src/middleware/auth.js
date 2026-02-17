@@ -30,7 +30,6 @@ export const protect = asyncHandler(async (req, res, next) => {
 
             next();
         } catch (error) {
-            console.error('Auth verify error:', error.message);
             res.status(401);
             // Re-throw with status code for global error handler
             if (!error.statusCode) error.statusCode = 401;

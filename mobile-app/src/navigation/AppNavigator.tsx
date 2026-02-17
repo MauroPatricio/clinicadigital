@@ -20,6 +20,7 @@ import PaymentScreen from '../screens/PaymentScreen';
 import HealthAssistantScreen from '../screens/HealthAssistantScreen';
 import VitalsMonitorScreen from '../screens/VitalsMonitorScreen';
 import SecureChatScreen from '@/screens/SecureChatScreen';
+import VideoCallScreen from '../screens/VideoCallScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -126,6 +127,16 @@ export default function AppNavigator() {
                             name="Chat"
                             component={SecureChatScreen}
                             options={{ title: 'Conversar com a Clínica' }}
+                        />
+                        <Stack.Screen
+                            name="VideoCall"
+                            component={VideoCallScreen}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                            name="AppointmentDetails"
+                            component={AppointmentsScreen} // Temporary placeholder
+                            options={{ title: 'Detalhes da Consulta' }}
                         />
                     </>
                 )}

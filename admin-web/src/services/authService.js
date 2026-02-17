@@ -5,9 +5,10 @@ export const authService = {
         const response = await api.post('/auth/register', userData);
 
         if (response.data.success) {
-            const { user, accessToken } = response.data.data;
+            const { user, accessToken, refreshToken } = response.data.data;
 
             localStorage.setItem('token', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('user', JSON.stringify(user));
 
             return { success: true, data: user, token: accessToken };
@@ -20,9 +21,10 @@ export const authService = {
         const response = await api.post('/auth/login', { email, password });
 
         if (response.data.success) {
-            const { user, accessToken } = response.data.data;
+            const { user, accessToken, refreshToken } = response.data.data;
 
             localStorage.setItem('token', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('user', JSON.stringify(user));
 
             return { success: true, data: user, token: accessToken };
@@ -38,6 +40,7 @@ export const authService = {
             console.error('Logout error:', error);
         } finally {
             localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
         }
     },
