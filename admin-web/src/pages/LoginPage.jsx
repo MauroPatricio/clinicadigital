@@ -125,17 +125,15 @@ const LoginPage = () => {
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5">Credenciais do Sistema</p>
                         <div className="inline-flex items-center gap-2 px-5 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-[10px] font-bold text-primary-700">admin@clinica.com</span>
+                            <span className="text-[10px] font-bold text-primary-700">Desenvolvido por Nhiquela Serviços & Consultoria, LDA</span>
                             <span className="h-3 w-px bg-slate-200"></span>
-                            <span className="text-[10px] font-bold text-primary-700">admin123</span>
                         </div>
                     </div>
                 </div>
 
                 <p className="mt-6 text-center text-[9px] font-black text-slate-500 uppercase tracking-[0.1em]">
-                    Desenvolvido por Nhiquela Servicos e Consultoria, LDA
+                    
                 </p>
             </div>
         </div>
