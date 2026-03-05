@@ -57,6 +57,8 @@ const io = new Server(httpServer, {
         origin: [
             process.env.FRONTEND_WEB_URL,
             process.env.FRONTEND_MOBILE_URL,
+            'https://clinica.gestaomodernaonline.com',
+            'http://localhost:3000',
             'http://localhost:4173',
             'http://127.0.0.1:3000',
             'http://127.0.0.1:5173'
@@ -82,6 +84,8 @@ app.use(cors({
     origin: [
         process.env.FRONTEND_WEB_URL,
         process.env.FRONTEND_MOBILE_URL,
+        'https://clinica.gestaomodernaonline.com',
+        'http://localhost:3000',
         'http://localhost:4173'
     ],
     credentials: true
