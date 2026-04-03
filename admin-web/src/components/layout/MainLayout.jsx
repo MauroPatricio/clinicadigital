@@ -6,6 +6,9 @@ import Sidebar from './Sidebar';
 import NotificationBell from '../notifications/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
 import { useClinic } from '../../context/ClinicContext';
+import HealthAssistantChat from '../clinical/HealthAssistantChat';
+import EmergencyButton from '../clinical/EmergencyButton';
+import EmergencyAlertModal from '../clinical/EmergencyAlertModal';
 
 const MainLayout = () => {
     const { t } = useTranslation();
@@ -60,6 +63,9 @@ const MainLayout = () => {
                         </div>
 
                         <div className="flex items-center gap-6">
+                            {/* Emergency SOS Button (Visible for all for exhibition) */}
+                            <EmergencyButton />
+
                             <div className="relative">
                                 <NotificationBell />
                             </div>
@@ -85,6 +91,14 @@ const MainLayout = () => {
                         <Outlet />
                     </div>
                 </main>
+
+                {/* AI Assistant Chat */}
+                <HealthAssistantChat />
+
+                {/* Emergency Modal for Admins/Staff */}
+                {(user?.role === 'admin' || user?.role === 'staff') && (
+                    <EmergencyAlertModal />
+                )}
             </div>
         </div>
     );

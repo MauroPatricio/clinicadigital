@@ -4,6 +4,7 @@ import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
 import { AppError } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
+import socketService from '../services/socketService.js';
 
 // @desc    Get user's conversations
 // @route   GET /api/chat/conversations
@@ -163,19 +164,16 @@ export const sendMessage = async (req, res, next) => {
 
         await conversation.save();
 
-        // Emit via Socket.IO to all participants
-        const io = req.app.get('io');
-        if (io) {
-            conversation.participants.forEach(participant => {
-                const userId = participant.user.toString();
-                if (userId !== req.user._id.toString()) {
-                    io.to(`user-${userId}`).emit('new-message', {
-                        conversationId: conversation._id,
-                        message
-                    });
-                }
-            });
-        }
+        // Emit via SocketService to all other participants
+        conversation.participants.forEach(participant => {
+            const userId = participant.user.toString();
+            if (userId !== req.user._id.toString()) {
+                socketService.emitToUser(userId, 'chat:new_message', {
+                    conversationId: conversation._id,
+                    message
+                });
+            }
+        });
 
         logger.info(`Message sent in conversation ${conversation._id}`);
 

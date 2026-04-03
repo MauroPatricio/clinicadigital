@@ -4,6 +4,7 @@ import Doctor from '../models/Doctor.js';
 import MedicalRecord from '../models/MedicalRecord.js';
 import { AppError } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
+import socketService from '../services/socketService.js';
 
 // @desc    Create lab order
 // @route   POST /api/lab/orders
@@ -26,6 +27,7 @@ export const createLabOrder = async (req, res, next) => {
             patient: patientId,
             doctor: doctor._id,
             medicalRecord: medicalRecordId,
+            clinic: req.user.currentClinic,
             exams,
             priority: priority || 'routine',
             notes,
@@ -41,7 +43,12 @@ export const createLabOrder = async (req, res, next) => {
             }
         }
 
-        await labOrder.populate(['patient', 'doctor']);
+        await labOrder.populate(['patient', 'doctor', 'clinic']);
+
+        // Emit real-time events
+        if (labOrder.clinic) {
+            socketService.emitToClinic(labOrder.clinic._id || labOrder.clinic, 'lab:order_created', labOrder);
+        }
 
         logger.info(`Lab order created: ${labOrder.orderNumber}`);
 
@@ -79,6 +86,11 @@ export const getLabOrders = async (req, res, next) => {
 
         if (status) query.status = status;
         if (priority) query.priority = priority;
+
+        // Multi-clinic scoping
+        if (req.user.role !== 'patient' && req.user.currentClinic) {
+            query.clinic = req.user.currentClinic;
+        }
 
         const orders = await LabOrder.find(query)
             .populate('patient', 'patientNumber user')
@@ -167,12 +179,16 @@ export const uploadLabResults = async (req, res, next) => {
 
         await order.save();
 
-        // Emit notification via Socket.IO
-        const io = req.app.get('io');
-        if (io && allCompleted) {
-            io.to(`user-${order.patient}`).emit('lab-results-ready', {
+        // Emit notification via SocketService
+        if (allCompleted) {
+            // Populate patient user for notification routing if needed
+            await order.populate({ path: 'patient', populate: { path: 'user' } });
+            
+            socketService.emitToUser(order.patient.user._id, 'lab:result_ready', {
                 orderNumber: order.orderNumber,
-                message: 'Your lab results are ready'
+                message: 'Os seus resultados de exames estão prontos',
+                orderId: order._id,
+                clinic: order.clinic
             });
         }
 

@@ -6,33 +6,18 @@ import { StatusBar } from 'expo-status-bar';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import notificationService from './src/services/notificationService';
+import SocketHandler from './src/components/SocketHandler';
+import './src/i18n';
 
 export default function App() {
-    useEffect(() => {
-        // Register for push notifications
-        notificationService.registerForPushNotifications();
-
-        // Listen for notifications
-        const subscription = notificationService.addNotificationReceivedListener((notification) => {
-            console.log('Notification received:', notification);
-        });
-
-        const responseSubscription = notificationService.addNotificationResponseReceivedListener((response) => {
-            console.log('Notification response:', response);
-            // Handle notification tap
-        });
-
-        return () => {
-            subscription.remove();
-            responseSubscription.remove();
-        };
-    }, []);
+    // ... (existing useEffect)
 
     return (
         <Provider store={store}>
             <SafeAreaProvider>
                 <PaperProvider>
                     <StatusBar style="auto" />
+                    <SocketHandler />
                     <AppNavigator />
                 </PaperProvider>
             </SafeAreaProvider>

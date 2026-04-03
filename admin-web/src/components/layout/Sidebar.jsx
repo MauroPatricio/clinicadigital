@@ -154,7 +154,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {
             name: 'Relatórios',
             icon: BarChart3,
-            path: '/owner/reports'
+            path: '/owner/reports',
+            submenu: [
+                { name: 'Geral', path: '/owner/reports' },
+                { name: 'Impacto Digital', path: '/owner/bi/impact' }
+            ]
         },
         {
             name: 'Convênios',
@@ -302,7 +306,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 name: 'Relatórios',
                 icon: FileText,
                 path: '/manager/reports',
-                description: 'Operacional e clínico'
+                description: 'Operacional e clínico',
+                submenu: [
+                    { name: 'Operacional', path: '/manager/reports' },
+                    { name: 'Impacto Digital', path: '/owner/bi/impact' } // Direct link for demo
+                ]
             },
             {
                 name: 'Configurações',

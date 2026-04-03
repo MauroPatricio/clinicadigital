@@ -1,4 +1,6 @@
 import StockItem from '../models/StockItem.js';
+import StockTransaction from '../models/StockTransaction.js';
+import logger from '../config/logger.js';
 
 // Get all stock items with filtering
 export const getStock = async (req, res) => {
@@ -64,16 +66,43 @@ export const adjustStock = async (req, res) => {
         const { id } = req.params;
         const { adjustment, reason } = req.body; // adjustment can be positive (restock) or negative (usage)
 
-        const item = await StockItem.findById(id);
-        if (!item) return res.status(404).json({ message: 'Stock item not found' });
-
-        const newQuantity = item.quantity + adjustment;
+        const previousQuantity = item.quantity;
+        const newQuantity = previousQuantity + adjustment;
         if (newQuantity < 0) return res.status(400).json({ message: 'Insufficient stock' });
 
         item.quantity = newQuantity;
-        // Optionally create a StockTransaction log here
-
         await item.save();
+
+        // Create transaction log
+        await StockTransaction.create({
+            item: id,
+            user: req.user._id,
+            type: adjustment > 0 ? 'entry' : 'exit',
+            quantity: Math.abs(adjustment),
+            previousQuantity,
+            newQuantity,
+            reason: reason || 'Manual adjustment',
+            clinic: req.user.currentClinic || item.clinic
+        });
+
+        // Real-time alert if low stock
+        const io = req.app.get('io');
+        if (newQuantity <= item.minStockLevel) {
+            io.emit('low-stock-alert', {
+                itemId: item._id,
+                name: item.name,
+                quantity: newQuantity,
+                minStockLevel: item.minStockLevel
+            });
+            logger.warn(`Low stock alert for ${item.name}: ${newQuantity} left.`);
+        }
+
+        // Notify all clients of stock change
+        io.emit('stock-update', {
+            itemId: item._id,
+            newQuantity
+        });
+
         res.json(item);
     } catch (error) {
         res.status(500).json({ message: error.message });

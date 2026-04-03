@@ -6,6 +6,8 @@ import AppointmentReminder from '../models/AppointmentReminder.js';
 import { AppError } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
 import { addMinutes, isBefore, isAfter, startOfDay, endOfDay } from 'date-fns';
+import { whatsappService } from '../services/whatsappService.js';
+import socketService from '../services/socketService.js';
 
 // @desc    Get all appointments
 // @route   GET /api/appointments
@@ -118,18 +120,23 @@ export const createAppointment = async (req, res, next) => {
             dateTime: requestedDateTime,
             duration: doctorProfile.consultationDuration,
             reason,
-            clinic: clinicId,
+            clinic: clinicId || req.user.currentClinic,
             status: 'scheduled'
         });
 
         // Update patient's next appointment
-        // Update patient's next appointment (Find patient by ID now)
-        const patient = await Patient.findById(patientId);
+        const patient = await Patient.findById(patientId).populate('user');
         patient.nextAppointment = appointment._id;
         await patient.save();
 
         // Populate before sending response
-        await appointment.populate(['patient', 'doctor', 'clinic']);
+        await appointment.populate(['patient', 'doctor', 'clinic', 'doctor.user', 'patient.user']);
+
+        // Emit real-time events
+        if (appointment.clinic) {
+            socketService.emitToClinic(appointment.clinic._id || appointment.clinic, 'appointment:created', appointment);
+        }
+        socketService.emitToUser(patient.user._id, 'appointment:update', appointment);
 
         logger.info(`New appointment created: ${appointment.appointmentNumber}`);
 
@@ -259,7 +266,9 @@ export const cancelAppointment = async (req, res, next) => {
     try {
         const { reason } = req.body;
 
-        const appointment = await Appointment.findById(req.params.id);
+        const appointment = await Appointment.findById(req.params.id)
+            .populate('patient')
+            .populate({ path: 'patient', populate: { path: 'user' } });
 
         if (!appointment) {
             return next(new AppError('Appointment not found', 404));
@@ -271,6 +280,15 @@ export const cancelAppointment = async (req, res, next) => {
         appointment.cancelledAt = Date.now();
 
         await appointment.save();
+
+        // Populate for real-time notification
+        await appointment.populate(['patient', 'doctor', 'clinic', 'patient.user']);
+
+        // Emit real-time events
+        if (appointment.clinic) {
+            socketService.emitToClinic(appointment.clinic._id || appointment.clinic, 'appointment:cancelled', appointment);
+        }
+        socketService.emitToUser(appointment.patient.user._id, 'appointment:update', appointment);
 
         logger.info(`Appointment cancelled: ${appointment.appointmentNumber}`);
 
@@ -288,7 +306,9 @@ export const cancelAppointment = async (req, res, next) => {
 // @access  Private
 export const confirmAppointment = async (req, res, next) => {
     try {
-        const appointment = await Appointment.findById(req.params.id);
+        const appointment = await Appointment.findById(req.params.id)
+            .populate('patient')
+            .populate({ path: 'patient', populate: { path: 'user' } });
 
         if (!appointment) {
             return next(new AppError('Appointment not found', 404));
@@ -297,6 +317,26 @@ export const confirmAppointment = async (req, res, next) => {
         appointment.status = 'confirmed';
         appointment.confirmedAt = new Date();
         await appointment.save();
+
+        // Populate for real-time notification
+        await appointment.populate(['patient', 'doctor', 'clinic', 'patient.user']);
+
+        // Emit real-time events
+        if (appointment.clinic) {
+            socketService.emitToClinic(appointment.clinic._id || appointment.clinic, 'appointment:confirmed', appointment);
+        }
+        socketService.emitToUser(appointment.patient.user._id, 'appointment:update', appointment);
+
+        // Send WhatsApp confirmation automatically
+        try {
+            const populatedApt = await Appointment.findById(appointment._id)
+                .populate({ path: 'patient', populate: { path: 'user', select: 'profile phone' } })
+                .populate({ path: 'doctor', populate: { path: 'user', select: 'profile' } });
+            
+            await whatsappService.sendAppointmentConfirmation(populatedApt);
+        } catch (wsError) {
+            logger.error(`Auto-WhatsApp confirmation failed: ${wsError.message}`);
+        }
 
         res.status(200).json({
             success: true,
@@ -444,9 +484,18 @@ export const sendConfirmation = async (req, res, next) => {
             status: 'pending'
         });
 
-        // TODO: Integrate with SMS/WhatsApp/Email service
-        // For now, just mark as sent
-        await reminder.markAsSent();
+        // Integrate with SMS/WhatsApp/Email service
+        if (method === 'whatsapp') {
+            try {
+                await whatsappService.sendAppointmentConfirmation(appointment);
+                await reminder.markAsSent();
+            } catch (wsError) {
+                return next(new AppError('Failed to send WhatsApp message', 500));
+            }
+        } else {
+            // For other methods, just mark as sent for now
+            await reminder.markAsSent();
+        }
 
         // Update appointment confirmation tracking
         appointment.confirmationSent[method] = {

@@ -1,0 +1,38 @@
+{
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "forgotPassword": "Mot de passe oublié?",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "error": "Erreur d'authentification"
+  },
+  "nav": {
+    "home": "Accueil",
+    "appointments": "Rendez-vous",
+    "health": "Ma Santé",
+    "chat": "Chat",
+    "sos": "SOS"
+  },
+  "home": {
+    "greeting": "Bonjour, {{name}}",
+    "quickActions": "Actions Rapides",
+    "upcoming": "Suivant",
+    "noUpcoming": "Aucun rendez-vous prévu",
+    "sosDescription": "Urgence? Appuyez sur le bouton SOS"
+  },
+  "appointments": {
+    "new": "Nouveau Rendez-vous",
+    "history": "Historique",
+    "confirmed": "Confirmé",
+    "pending": "En attente",
+    "cancelled": "Annulé",
+    "details": "Détails du rendez-vous"
+  },
+  "sos": {
+    "title": "Centre d'Urgence",
+    "button": "Demander de l'Aide",
+    "connecting": "Connexion au support...",
+    "dispatched": "Ambulance envoyée"
+  }
+}

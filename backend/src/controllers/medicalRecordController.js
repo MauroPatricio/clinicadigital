@@ -3,6 +3,7 @@ import Prescription from '../models/Prescription.js';
 import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
 import Appointment from '../models/Appointment.js';
+import AuditLog from '../models/AuditLog.js';
 import { AppError } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
 
@@ -86,6 +87,18 @@ export const getMedicalRecord = async (req, res, next) => {
                 return next(new AppError('Not authorized to access this record', 403));
             }
         }
+
+        // Log access
+        await AuditLog.logAction({
+            user: req.user._id,
+            action: 'VIEW',
+            module: 'MEDICAL_RECORDS',
+            resourceType: 'MedicalRecord',
+            resourceId: record._id,
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            clinic: req.user.currentClinic || record.doctor.clinic // Fallback to doctor's clinic if user clinic not set
+        });
 
         res.status(200).json({
             success: true,
@@ -189,6 +202,8 @@ export const updateMedicalRecord = async (req, res, next) => {
             return next(new AppError('Not authorized to update this record', 403));
         }
 
+        const oldRecord = record.toObject();
+
         record = await MedicalRecord.findByIdAndUpdate(
             req.params.id,
             req.body,
@@ -197,6 +212,22 @@ export const updateMedicalRecord = async (req, res, next) => {
                 runValidators: true
             }
         ).populate(['patient', 'doctor', 'appointment', 'prescriptions']);
+
+        // Log changes
+        await AuditLog.logAction({
+            user: req.user._id,
+            action: 'UPDATE',
+            module: 'MEDICAL_RECORDS',
+            resourceType: 'MedicalRecord',
+            resourceId: record._id,
+            changes: {
+                before: oldRecord,
+                after: record.toObject()
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            clinic: req.user.currentClinic || record.doctor.clinic
+        });
 
         res.status(200).json({
             success: true,

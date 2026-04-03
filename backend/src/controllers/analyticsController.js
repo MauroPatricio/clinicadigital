@@ -4,6 +4,10 @@ import Bill from '../models/Bill.js';
 import User from '../models/User.js';
 import Clinic from '../models/Clinic.js';
 import StaffPerformance from '../models/StaffPerformance.js';
+import MedicalRecord from '../models/MedicalRecord.js';
+import Triage from '../models/Triage.js';
+import StockItem from '../models/StockItem.js';
+import StockTransaction from '../models/StockTransaction.js';
 import asyncHandler from 'express-async-handler';
 
 // @desc    Get Owner Dashboard Analytics - ANTIGRAVITY ENHANCED
@@ -796,6 +800,71 @@ export const getUnitDashboard = asyncHandler(async (req, res) => {
                 revenueThisMonth: revenueData[0]?.total || 0
             },
             ...specificStats
+        }
+    });
+});
+
+// @desc    Get Health Innovation Stats (for Exhibition/Phase 3)
+// @route   GET /api/analytics/innovation-stats
+// @access  Private (Admin/Manager)
+export const getHealthInnovationStats = asyncHandler(async (req, res) => {
+    const clinicId = req.user.currentClinic;
+
+    // 1. Epidemiology - Top 5 Diagnosis Trends
+    const epidemiology = await MedicalRecord.aggregate([
+        { $match: { clinic: clinicId } },
+        { $unwind: '$diagnosis' },
+        {
+            $group: {
+                _id: '$diagnosis.description',
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { count: -1 } },
+        { $limit: 5 }
+    ]);
+
+    // 2. Triage Efficiency - Avg Wait Time by Urgency
+    const triageEfficiency = await Triage.aggregate([
+        { $match: { clinic: clinicId } },
+        {
+            $group: {
+                _id: '$urgencyLevel',
+                avgWaitMinutes: { $avg: 15 }, // Mock logic for demo if no start/end timestamps yet
+                totalCases: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } }
+    ]);
+
+    // 3. Stock Analytics - Items below minimum
+    const lowStockItems = await StockItem.find({
+        clinic: clinicId,
+        $expr: { $lte: ['$quantity', '$minQuantity'] }
+    }).select('name quantity minQuantity unit');
+
+    // 4. Monthly Patient Engagement
+    const patientGrowth = await Patient.aggregate([
+        {
+            $group: {
+                _id: { $month: '$createdAt' },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } }
+    ]);
+
+    res.status(200).json({
+        success: true,
+        data: {
+            epidemiology: epidemiology.map(item => ({ name: item._id, value: item.count })),
+            triage: triageEfficiency.map(item => ({ group: item._id, wait: item.avgWaitMinutes, cases: item.totalCases })),
+            stock: {
+                lowCount: lowStockItems.length,
+                lowItems: lowStockItems
+            },
+            growth: patientGrowth.map(item => ({ month: item._id, count: item.count })),
+            innovationScore: 85 // Mock innovation index
         }
     });
 });

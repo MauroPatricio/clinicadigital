@@ -1,0 +1,38 @@
+{
+  "auth": {
+    "login": "Entrar",
+    "register": "Criar Conta",
+    "forgotPassword": "Esqueceu a senha?",
+    "email": "E-mail",
+    "password": "Senha",
+    "error": "Erro ao autenticar"
+  },
+  "nav": {
+    "home": "Início",
+    "appointments": "Consultas",
+    "health": "Minha Saúde",
+    "chat": "Chat",
+    "sos": "SOS"
+  },
+  "home": {
+    "greeting": "Olá, {{name}}",
+    "quickActions": "Ações Rápidas",
+    "upcoming": "Próxima Consulta",
+    "noUpcoming": "Nenhuma consulta agendada",
+    "sosDescription": "Emergência? Pressione o botão SOS"
+  },
+  "appointments": {
+    "new": "Nova Consulta",
+    "history": "Histórico",
+    "confirmed": "Confirmada",
+    "pending": "Pendente",
+    "cancelled": "Cancelada",
+    "details": "Detalhes da Consulta"
+  },
+  "sos": {
+    "title": "Centro de Emergência",
+    "button": "Solicitar Socorro",
+    "connecting": "Conectando ao suporte...",
+    "dispatched": "Ambulância enviada"
+  }
+}

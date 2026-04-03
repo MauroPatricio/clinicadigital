@@ -1,0 +1,38 @@
+{
+  "auth": {
+    "login": "Ingresar",
+    "register": "Crear Cuenta",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "error": "Error de autenticación"
+  },
+  "nav": {
+    "home": "Inicio",
+    "appointments": "Citas",
+    "health": "Mi Salud",
+    "chat": "Chat",
+    "sos": "SOS"
+  },
+  "home": {
+    "greeting": "Hola, {{name}}",
+    "quickActions": "Acciones Rápidas",
+    "upcoming": "Siguiente",
+    "noUpcoming": "Sin citas programadas",
+    "sosDescription": "¿Emergencia? Presione el botón SOS"
+  },
+  "appointments": {
+    "new": "Nueva Cita",
+    "history": "Historial",
+    "confirmed": "Confirmada",
+    "pending": "Pendiente",
+    "cancelled": "Cancelada",
+    "details": "Detalles de la Cita"
+  },
+  "sos": {
+    "title": "Centro de Emergencia",
+    "button": "Solicitar Auxilio",
+    "connecting": "Conectando al soporte...",
+    "dispatched": "Ambulancia enviada"
+  }
+}

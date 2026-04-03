@@ -5,7 +5,8 @@ import {
     getStaffDashboard,
     getClinicAnalytics,
     getStaffPerformanceReport,
-    getUnitDashboard
+    getUnitDashboard,
+    getHealthInnovationStats
 } from '../controllers/analyticsController.js';
 import {
     protect,
@@ -13,7 +14,8 @@ import {
     requireManager,
     requireRoleType,
     requireActiveSubscription,
-    requireFeature
+    requireFeature,
+    authorize
 } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -59,5 +61,7 @@ router.get(
     '/unit/:unitId',
     getUnitDashboard
 );
+
+router.get('/innovation-stats', authorize('admin', 'manager', 'owner'), getHealthInnovationStats);
 
 export default router;

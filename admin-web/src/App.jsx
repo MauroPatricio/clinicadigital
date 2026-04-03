@@ -99,6 +99,8 @@ import StockMovementsPage from './pages/pharmacy/StockMovementsPage';
 import GenericPlaceholderPage from './components/common/GenericPlaceholderPage';
 import TelemedicineHistoryPage from './pages/telemedicine/TelemedicineHistoryPage';
 import DigitalPrescriptionPage from './pages/telemedicine/DigitalPrescriptionPage';
+import ExhibitionPage from './pages/ExhibitionPage';
+import HealthImpactDashboard from './pages/HealthImpactDashboard';
 import { BarChart, HeartHandshake, Smile, Bell, MessageCircle } from 'lucide-react'; // Icons for placeholders
 
 // Legacy Pages (to be migrated)
@@ -132,6 +134,7 @@ function App() {
                                     <Route path="/register" element={<RegisterPage />} />
                                     <Route path="/clinic-selection" element={<ClinicSelectionPage />} />
                                     <Route path="/owner/units/new" element={<UnitRegistrationPage />} />
+                                    <Route path="/exposicao" element={<ExhibitionPage />} />
 
                                     {/* Protected Routes with Layout */}
                                     <Route
@@ -200,6 +203,7 @@ function App() {
                                             <Route path="bi/doctors" element={<DoctorPerformanceBI />} />
                                             <Route path="bi/productivity" element={<ProductivityAnalysisPage />} />
                                             <Route path="bi/growth" element={<GrowthAnalysisPage />} />
+                                            <Route path="bi/impact" element={<HealthImpactDashboard />} />
                                             {/* Laboratory */}
                                             <Route path="laboratory/requests" element={<LaboratoryRequestsPage />} />
                                             <Route path="laboratory/results" element={<LaboratoryResultsPage />} />

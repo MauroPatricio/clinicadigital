@@ -5,9 +5,12 @@ import {
     DollarSign, FileText, X, FlaskConical, UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import NotificationBell from '../components/NotificationBell';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 const DashboardLayout = () => {
+    const { t } = useTranslation();
     const { user, logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
@@ -17,13 +20,13 @@ const DashboardLayout = () => {
     };
 
     const navigation = [
-        { name: 'Dashboard', href: '/', icon: Home },
-        { name: 'Patients', href: '/patients', icon: Users },
-        { name: 'Doctors', href: '/doctors', icon: UserCheck },
-        { name: 'Appointments', href: '/appointments', icon: Calendar },
-        { name: 'Lab Results', href: '/lab-results', icon: FlaskConical },
-        { name: 'Billing', href: '/billing', icon: DollarSign },
-        { name: 'Reports', href: '/reports', icon: FileText },
+        { name: t('nav.dashboard'), href: '/', icon: Home },
+        { name: t('nav.patients'), href: '/patients', icon: Users },
+        { name: t('nav.doctors'), href: '/doctors', icon: UserCheck },
+        { name: t('nav.appointments'), href: '/appointments', icon: Calendar },
+        { name: t('nav.labResults') || t('nav.exams'), href: '/lab-results', icon: FlaskConical },
+        { name: t('nav.billing'), href: '/billing', icon: DollarSign },
+        { name: t('nav.reports'), href: '/reports', icon: FileText },
     ];
 
     const isActive = (path) => {
@@ -37,7 +40,7 @@ const DashboardLayout = () => {
             <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 } `}>
                 <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-                    <h1 className="text-xl font-bold text-primary-600">Clínica Digital</h1>
+                    <h1 className="text-xl font-bold text-primary-600">{t('nav.systemName')}</h1>
                     <button
                         onClick={() => setSidebarOpen(false)}
                         className="lg:hidden text-gray-400 hover:text-gray-500"
@@ -88,6 +91,7 @@ const DashboardLayout = () => {
                             </button>
 
                             <div className="flex items-center space-x-4 ml-auto">
+                                <LanguageSwitcher />
                                 <NotificationBell />
                                 <div className="text-right hidden sm:block">
                                     <p className="text-sm font-medium text-gray-900">
@@ -98,7 +102,7 @@ const DashboardLayout = () => {
                                 <button
                                     onClick={handleLogout}
                                     className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-                                    title="Logout"
+                                    title={t('nav.logout')}
                                 >
                                     <LogOut className="h-5 w-5" />
                                 </button>

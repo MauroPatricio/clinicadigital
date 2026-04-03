@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import agoraService from '../../services/agoraService';
+import { telemedicineService } from '../../services/telemedicineService';
 
 const VideoConsultationPage = () => {
     const { id } = useParams();
@@ -17,18 +19,63 @@ const VideoConsultationPage = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [consultationTime, setConsultationTime] = useState('00:00');
+    const [remoteUser, setRemoteUser] = useState(null);
+    const [isJoined, setIsJoined] = useState(false);
+    const [lowBandwidth, setLowBandwidth] = useState(false);
+
+    const localVideoRef = useRef(null);
+    const remoteVideoRef = useRef(null);
+
+    // Agora Setup
+    useEffect(() => {
+        const initCall = async () => {
+            try {
+                // 1. Get Token from backend
+                const response = await telemedicineService.getToken(id);
+                const { token, appId, channelName } = response.data;
+
+                // 2. Setup callbacks
+                agoraService.setCallbacks(
+                    (user) => {
+                        setRemoteUser(user);
+                        toast.success('Paciente entrou na sala');
+                    },
+                    (user) => {
+                        setRemoteUser(null);
+                        toast.error('Paciente saiu da sala');
+                    }
+                );
+
+                // 3. Join channel
+                const { localVideoTrack } = await agoraService.join(appId, channelName, token);
+                
+                // 4. Play local video
+                if (localVideoRef.current) {
+                    localVideoTrack.play(localVideoRef.current);
+                }
+
+                setIsJoined(true);
+            } catch (error) {
+                console.error('Agora Error:', error);
+                toast.error('Erro ao iniciar a consulta de vídeo. Verifique suas permissões de câmera.');
+            }
+        };
+
+        if (id) initCall();
+
+        return () => {
+            agoraService.leave();
+        };
+    }, [id]);
+
+    // Handle Remote Video Rendering
+    useEffect(() => {
+        if (remoteUser && remoteUser.videoTrack && remoteVideoRef.current) {
+            remoteUser.videoTrack.play(remoteVideoRef.current);
+        }
+    }, [remoteUser]);
 
     // Mock Timer
-    useEffect(() => {
-        let seconds = 0;
-        const interval = setInterval(() => {
-            seconds++;
-            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const secs = (seconds % 60).toString().padStart(2, '0');
-            setConsultationTime(`${mins}:${secs}`);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     const handleSendMessage = (e) => {
         e.preventDefault();
@@ -37,11 +84,38 @@ const VideoConsultationPage = () => {
         setNewMessage('');
     };
 
-    const handleEndCall = () => {
+    const handleEndCall = async () => {
         if (window.confirm('Tem certeza que deseja encerrar a consulta?')) {
-            toast.success('Consulta encerrada com sucesso');
-            navigate('/doctor/consultations');
+            try {
+                await agoraService.leave();
+                await telemedicineService.endConsultation(id);
+                toast.success('Consulta encerrada com sucesso');
+                navigate('/doctor/consultations');
+            } catch (error) {
+                toast.error('Erro ao encerrar consulta');
+            }
         }
+    };
+
+    const toggleMic = async () => {
+        const newState = !micOn;
+        await agoraService.toggleAudio(newState);
+        setMicOn(newState);
+    };
+
+    const toggleVideo = async () => {
+        const newState = !videoOn;
+        await agoraService.toggleVideo(newState);
+        setVideoOn(newState);
+    };
+
+    const toggleLowBandwidth = async () => {
+        const newState = !lowBandwidth;
+        setLowBandwidth(newState);
+        // In low bandwidth, we turn off video to save data
+        await agoraService.toggleVideo(!newState);
+        setVideoOn(!newState);
+        toast(newState ? 'Modo baixo consumo ligado (Audio-only)' : 'Modo normal ligado', { icon: '️📶' });
     };
 
     return (
@@ -61,21 +135,23 @@ const VideoConsultationPage = () => {
                 </div>
 
                 {/* Remote Video (Patient) */}
-                <div className="w-full h-full bg-gray-800 flex items-center justify-center relative">
-                    {/* Placeholder for Remote Stream */}
-                    <div className="text-center">
-                        <User className="w-32 h-32 text-gray-600 mx-auto mb-4" />
-                        <p className="text-gray-400">Aguardando paciente entrar...</p>
-                    </div>
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center relative overflow-hidden">
+                    <div ref={remoteVideoRef} className="w-full h-full"></div>
+                    
+                    {!remoteUser && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-900/50">
+                            <div className="text-center">
+                                <User className="w-32 h-32 text-gray-600 mx-auto mb-4" />
+                                <p className="text-gray-400">Aguardando paciente entrar...</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Local Video (PiP) */}
-                    <div className="absolute bottom-24 right-6 w-48 h-36 bg-black rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl">
-                        {videoOn ? (
-                            <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                                <span className="text-xs text-gray-400">Você</span>
-                            </div>
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                    <div className="absolute bottom-24 right-6 w-48 h-36 bg-black rounded-xl border-2 border-indigo-500/50 overflow-hidden shadow-2xl z-20">
+                        <div ref={localVideoRef} className="w-full h-full"></div>
+                        {!videoOn && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                                 <VideoOff className="text-white" />
                             </div>
                         )}
@@ -85,17 +161,27 @@ const VideoConsultationPage = () => {
                 {/* Controls Bar */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent flex justify-center items-center gap-4">
                     <button
-                        onClick={() => setMicOn(!micOn)}
+                        onClick={toggleMic}
                         className={`p-4 rounded-full transition-colors ${micOn ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                        title={micOn ? 'Desativar Microfone' : 'Ativar Microfone'}
                     >
                         {micOn ? <Mic /> : <MicOff />}
                     </button>
 
                     <button
-                        onClick={() => setVideoOn(!videoOn)}
+                        onClick={toggleVideo}
                         className={`p-4 rounded-full transition-colors ${videoOn ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                        title={videoOn ? 'Desativar Vídeo' : 'Ativar Vídeo'}
                     >
                         {videoOn ? <Video /> : <VideoOff />}
+                    </button>
+
+                    <button
+                        onClick={toggleLowBandwidth}
+                        className={`p-4 rounded-full transition-colors ${lowBandwidth ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
+                        title="Modo Baixo Consumo de Dados"
+                    >
+                        <Settings className={lowBandwidth ? 'animate-spin-slow' : ''} />
                     </button>
 
                     <button

@@ -9,6 +9,7 @@ import { Server } from 'socket.io';
 import connectDB from './config/database.js';
 import logger from './config/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { initSocketService } from './services/socketService.js';
 
 // API Routes
 import authRoutes from './routes/authRoutes.js';
@@ -42,6 +43,9 @@ import permissionRoutes from './routes/permissionRoutes.js';
 import auditLogRoutes from './routes/auditLogRoutes.js';
 import ownerLabRoutes from './routes/ownerLabRoutes.js';
 import statusRoutes from './routes/statusRoutes.js';
+import triageRoutes from './routes/triageRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+import emergencyRoutes from './routes/emergencyRoutes.js';
 
 // Batch 5: Pharmacy & Stock
 import stockRoutes from './routes/stockRoutes.js';
@@ -51,21 +55,27 @@ import supplierRoutes from './routes/supplierRoutes.js';
 const app = express();
 const httpServer = createServer(app);
 
+// CORS Origins
+const allowedOrigins = [
+    process.env.FRONTEND_WEB_URL,
+    process.env.FRONTEND_MOBILE_URL,
+    'https://clinica.gestaomodernaonline.com',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173'
+].filter(Boolean); // Remove undefined/null
+
 // Initialize Socket.IO
 const io = new Server(httpServer, {
     cors: {
-        origin: [
-            process.env.FRONTEND_WEB_URL,
-            process.env.FRONTEND_MOBILE_URL,
-            'https://clinica.gestaomodernaonline.com',
-            'http://localhost:3000',
-            'http://localhost:4173',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5173'
-        ],
+        origin: allowedOrigins,
         credentials: true
     }
 });
+
+// Initialize SocketService
+initSocketService(io);
 
 // Connect to MongoDB (non-blocking)
 connectDB().catch(err => {
@@ -81,13 +91,7 @@ app.use(helmet({
 
 // CORS
 app.use(cors({
-    origin: [
-        process.env.FRONTEND_WEB_URL,
-        process.env.FRONTEND_MOBILE_URL,
-        'https://clinica.gestaomodernaonline.com',
-        'http://localhost:3000',
-        'http://localhost:4173'
-    ],
+    origin: allowedOrigins,
     credentials: true
 }));
 
@@ -126,9 +130,6 @@ app.get('/health', (req, res) => {
 
 // Status Page Route (HTML & API)
 app.use('/', statusRoutes);
-
-// Status Page Routes
-// Moved import to top and app.use to appropriate location
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -169,6 +170,9 @@ app.use('/api/owner/laboratory', ownerLabRoutes); // Laboratory Management
 // Batch 5: Pharmacy & Stock
 app.use('/api/stock', stockRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/triage', triageRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/emergency', emergencyRoutes);
 
 
 // 404 handler
@@ -186,9 +190,22 @@ app.use(errorHandler);
 io.on('connection', (socket) => {
     logger.info(`Socket connected: ${socket.id}`);
 
+    // Join generic rooms
     socket.on('join-room', (roomId) => {
         socket.join(roomId);
         logger.info(`Socket ${socket.id} joined room ${roomId}`);
+    });
+
+    // Join user-specific room
+    socket.on('join-user', (userId) => {
+        socket.join(`user-${userId}`);
+        logger.info(`Socket ${socket.id} joined user room: user-${userId}`);
+    });
+
+    // Join clinic-specific room
+    socket.on('join-clinic', (clinicId) => {
+        socket.join(`clinic-${clinicId}`);
+        logger.info(`Socket ${socket.id} joined clinic room: clinic-${clinicId}`);
     });
 
     socket.on('leave-room', (roomId) => {

@@ -3,6 +3,7 @@ import Bill from '../models/Bill.js';
 import Patient from '../models/Patient.js';
 import { AppError } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
+import socketService from '../services/socketService.js';
 
 // @desc    Process M-Pesa payment
 // @route   POST /api/payments/mpesa
@@ -60,6 +61,19 @@ export const processMpesaPayment = async (req, res, next) => {
             }
 
             await bill.save();
+
+            // Emit real-time events
+            const populatedPatient = await Patient.findById(bill.patient).populate('user');
+            if (populatedPatient?.user) {
+                socketService.emitToUser(populatedPatient.user._id, 'payment:confirmed', {
+                    payment,
+                    billStatus: bill.paymentStatus
+                });
+            }
+            socketService.emitToClinic(bill.clinic, 'payment:received', {
+                payment,
+                billStatus: bill.paymentStatus
+            });
         }, 2000);
 
         logger.info(`M-Pesa payment initiated: ${payment.transactionId}`);
@@ -114,6 +128,19 @@ export const processCardPayment = async (req, res, next) => {
         }
 
         await bill.save();
+
+        // Emit real-time events
+        const populatedPatient = await Patient.findById(bill.patient).populate('user');
+        if (populatedPatient?.user) {
+            socketService.emitToUser(populatedPatient.user._id, 'payment:confirmed', {
+                payment,
+                billStatus: bill.paymentStatus
+            });
+        }
+        socketService.emitToClinic(bill.clinic, 'payment:received', {
+            payment,
+            billStatus: bill.paymentStatus
+        });
 
         logger.info(`Card payment processed: ${payment.transactionId}`);
 
@@ -221,6 +248,17 @@ export const refundPayment = async (req, res, next) => {
         bill.amountPaid -= payment.refund.amount;
         bill.paymentStatus = bill.amountPaid >= bill.total ? 'paid' : 'partial';
         await bill.save();
+
+        // Notify patient in real-time
+        const populatedPatient = await Patient.findById(payment.patient).populate('user');
+        if (populatedPatient?.user) {
+            socketService.emitToUser(populatedPatient.user._id, 'payment:refunded', {
+                paymentId: payment._id,
+                amount: payment.refund.amount,
+                billId: bill._id,
+                billStatus: bill.paymentStatus
+            });
+        }
 
         logger.warn(`Payment refunded: ${payment.transactionId} - Reason: ${reason}`);
 

@@ -20,6 +20,11 @@ const labOrderSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MedicalRecord'
     },
+    clinic: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Clinic',
+        required: true
+    },
     exams: [{
         name: {
             type: String,

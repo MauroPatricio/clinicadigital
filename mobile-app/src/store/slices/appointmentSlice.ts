@@ -28,6 +28,14 @@ const appointmentSlice = createSlice({
         setAppointments: (state, action: PayloadAction<Appointment[]>) => {
             state.appointments = action.payload;
         },
+        updateAppointmentStatus: (state, action: PayloadAction<Appointment>) => {
+            const index = state.appointments.findIndex(apt => apt._id === action.payload._id);
+            if (index !== -1) {
+                state.appointments[index] = action.payload;
+            } else {
+                state.appointments.unshift(action.payload);
+            }
+        },
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.loading = action.payload;
         },
@@ -37,5 +45,5 @@ const appointmentSlice = createSlice({
     },
 });
 
-export const { setAppointments, setLoading, setError } = appointmentSlice.actions;
+export const { setAppointments, updateAppointmentStatus, setLoading, setError } = appointmentSlice.actions;
 export default appointmentSlice.reducer;

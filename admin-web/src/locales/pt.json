@@ -213,5 +213,115 @@
         "mockMessage": "Olá, consegue me ouvir bem?",
         "you": "Você",
         "typeMessage": "Digite uma mensagem..."
+    },
+    "exhibition": {
+        "title": "Inovação na Saúde Digital em Moçambique",
+        "subtitle": "Soluções inovadoras desenhadas para o contexto africano, vencendo barreiras geográficas e infraestruturais para salvar vidas.",
+        "badge": "Exposição de Inovação Digital",
+        "explore": "Explorar Soluções",
+        "viewImpact": "Ver Impacto",
+        "innovationsTitle": "Inovações em Destaque",
+        "requestDemo": "Solicitar Demo",
+        "integratedSystem": {
+            "title": "Sistema de Saúde Digital Integrado para África",
+            "badge": "Visão de Ecossistema",
+            "desc": "Não apenas uma ferramenta, mas um ecossistema completo que unifica telemedicina, prontuários, pagamentos móveis (M-Pesa/e-Mola) e gestão de farmácias num único coração digital.",
+            "videoCta": "Ver Demonstração do Ecossistema",
+            "videoSub": "Apresentação interativa de 2 minutos"
+        },
+        "impact": {
+            "title": "Impacto que Salva Vidas",
+            "subtitle": "A nossa tecnologia é medida por resultados reais no terreno e no dia-a-dia de milhares de moçambicanos.",
+            "waitingTime": "Tempo de Espera",
+            "waitingTimeSub": "Redução em hospitais",
+            "access": "Acesso a Médicos",
+            "accessSub": "Cobertura alcançada",
+            "errors": "Erros Clínicos",
+            "errorsSub": "Devido a EHR digital",
+            "lives": "Vidas Impactadas",
+            "livesSub": "Nos últimos 12 meses"
+        },
+        "cta": {
+            "title": "Pronto para digitalizar o futuro da saúde em Moçambique?",
+            "button": "Agendar Reunião de Demonstração",
+            "sub": "Junte-se a dezenas de unidades que já estão a transformar vidas."
+        },
+        "footer": {
+            "rights": "ClínicaDigital 2026",
+            "developedBy": "Desenvolvido por",
+            "terms": "Termos",
+            "privacy": "Privacidade",
+            "contact": "Contacto"
+        },
+        "problemLabel": "Problema Central",
+        "impactLabel": "Impacto Gerado",
+        "solutions": {
+            "telemedicine": {
+                "title": "Telemedicina Low-Bandwidth",
+                "desc": "Consultas por vídeo, áudio ou SMS otimizadas para internet instável.",
+                "problem": "Falta de especialistas em zonas rurais.",
+                "impact": "Leva médicos a locais sem hospitais."
+            },
+            "whatsapp": {
+                "title": "Triagem via WhatsApp",
+                "desc": "Agendamento automático e pré-triagem inteligente por chat.",
+                "problem": "Filas de espera longas e desorganizadas.",
+                "impact": "Reduz filas nos hospitais em mais de 40%."
+            },
+            "ehr": {
+                "title": "Prontuário Nacional (EHR)",
+                "desc": "Histórico médico digital acessível em qualquer unidade pública ou privada.",
+                "problem": "Histórico médico fragmentado em papel.",
+                "impact": "Evita perda de fichas e erro de diagnóstico."
+            },
+            "pharmacy": {
+                "title": "Gestão de Medicamentos",
+                "desc": "Controlo de stock em tempo real com alertas de rutura.",
+                "problem": "Ruturas de stock e desperdício por validade.",
+                "impact": "Garante que o medicamento chegue ao paciente."
+            },
+            "ai_assistant": {
+                "title": "Assistente IA 24h",
+                "desc": "Chatbot de orientação de sintomas e Primeiros Socorros.",
+                "problem": "Falta de informação médica imediata.",
+                "impact": "Reduz sobrecarga em emergências hospitalares."
+            },
+            "emergency": {
+                "title": "SOS Digital Moçambique",
+                "desc": "Pedido de ambulância via USSD ou App com GPS em tempo real.",
+                "problem": "Dificuldade em localizar emergências.",
+                "impact": "Reduz tempo de resposta em 30 min."
+            },
+            "dashboard": {
+                "title": "Dashboard Nacional de Saúde",
+                "desc": "Dados epidemiológicos em tempo real para tomada de decisão.",
+                "problem": "Atraso no reporte de dados de saúde.",
+                "impact": "Deteção precoce de surtos e epidemias."
+            },
+            "remote_monitoring": {
+                "title": "Monitoramento Remoto",
+                "desc": "Conectividade para dispositivos de pressão e glicemia à distância.",
+                "problem": "Necessidade de deslocações constantes para check-ups.",
+                "impact": "Melhor controlo de doenças crónicas."
+            },
+            "hms": {
+                "title": "Sistema Hospitalar (HMS)",
+                "desc": "Modernização completa da gestão clínica e faturação.",
+                "problem": "Processos manuais e burocracia excessiva.",
+                "impact": "Aumento de eficiência operacional."
+            },
+            "ai_diagnosis": {
+                "title": "Diagnóstico por IA",
+                "desc": "Análise assistida de exames laboratoriais e imagiologia.",
+                "problem": "Escassez de médicos radiologistas/patologistas.",
+                "impact": "Aumenta precisão e velocidade do diagnóstico."
+            },
+            "offline": {
+                "title": "Plataforma Offline-First",
+                "desc": "Trabalha sem internet e sincroniza quando a ligação volta.",
+                "problem": "Zonas brancas sem cobertura de rede.",
+                "impact": "Digitalização total em zonas remotas."
+            }
+        }
     }
 }

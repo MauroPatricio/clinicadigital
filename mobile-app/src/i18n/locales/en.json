@@ -1,0 +1,38 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Sign Up",
+    "forgotPassword": "Forgot Password?",
+    "email": "Email",
+    "password": "Password",
+    "error": "Authentication Error"
+  },
+  "nav": {
+    "home": "Home",
+    "appointments": "Appointments",
+    "health": "My Health",
+    "chat": "Chat",
+    "sos": "SOS"
+  },
+  "home": {
+    "greeting": "Hello, {{name}}",
+    "quickActions": "Quick Actions",
+    "upcoming": "Upcoming",
+    "noUpcoming": "No upcoming appointments",
+    "sosDescription": "Emergency? Press the SOS button"
+  },
+  "appointments": {
+    "new": "New Appointment",
+    "history": "History",
+    "confirmed": "Confirmed",
+    "pending": "Pending",
+    "cancelled": "Cancelled",
+    "details": "Appointment Details"
+  },
+  "sos": {
+    "title": "Emergency Center",
+    "button": "Request Aid",
+    "connecting": "Connecting to support...",
+    "dispatched": "Ambulance dispatched"
+  }
+}

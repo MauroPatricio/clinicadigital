@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { appointmentService, patientService, doctorService } from '../services/apiService';
+import { appointmentService, patientService, doctorService, triageService } from '../services/apiService';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardList } from 'lucide-react';
+import TriageForm from '../components/clinical/TriageForm';
 
 const AppointmentFormPage = () => {
     const navigate = useNavigate();
@@ -19,6 +20,9 @@ const AppointmentFormPage = () => {
         specialty: '',
         reason: ''
     });
+
+    const [showTriage, setShowTriage] = useState(false);
+    const [triageData, setTriageData] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -58,22 +62,24 @@ const AppointmentFormPage = () => {
         try {
             const dateTime = new Date(`${formData.date}T${formData.time}`);
 
-            await appointmentService.create({
+            const appointment = await appointmentService.create({
                 patientId: formData.patientId,
                 doctorId: formData.doctorId,
                 dateTime: dateTime.toISOString(),
                 type: formData.type,
                 specialty: formData.specialty,
                 reason: formData.reason,
-                // clinicId is optional or could be hardcoded/fetched if needed.
-                // Assuming backend might require it or make it optional. 
-                // Looking at controller: clinicId is used. 
-                // We might need to fetch a default clinic or leave it empty if backend allows.
-                // Controller: const { ... clinicId } = req.body;
-                // create({ ... clinic: clinicId })
-                // Models say clinic ref 'Clinic'.
-                // If required, we fail. Let's try without and see.
             });
+
+            // Submit triage if enabled
+            if (showTriage && triageData) {
+                await triageService.submit({
+                    ...triageData,
+                    patient: formData.patientId,
+                    appointment: appointment._id
+                });
+                toast.success('Triagem registrada e prioridade definida');
+            }
 
             toast.success('Appointment created successfully');
             navigate('/appointments');
@@ -145,6 +151,31 @@ const AppointmentFormPage = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Reason</label>
                         <textarea name="reason" rows="3" value={formData.reason} onChange={handleChange} className="input mt-1"></textarea>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative">
+                                <input 
+                                    type="checkbox" 
+                                    className="sr-only" 
+                                    checked={showTriage}
+                                    onChange={(e) => setShowTriage(e.target.checked)}
+                                />
+                                <div className={`w-10 h-5 rounded-full transition-colors ${showTriage ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${showTriage ? 'translate-x-5' : ''}`}></div>
+                            </div>
+                            <span className="flex items-center gap-2 text-sm font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors">
+                                <ClipboardList className="w-4 h-4" />
+                                Adicionar Triagem Clínica Antecipada
+                            </span>
+                        </label>
+
+                        {showTriage && (
+                            <div className="mt-6 animate-fadeIn">
+                                <TriageForm onDataChange={setTriageData} />
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end pt-4">

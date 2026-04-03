@@ -1,4 +1,5 @@
 import api from './api';
+export { api };
 
 export const dashboardService = {
     async getStats() {
@@ -16,9 +17,13 @@ export const dashboardService = {
         return response.data.data;
     },
 
-    async getUnitStats(unitId) {
-        const response = await api.get(`/analytics/unit/${unitId}`);
-        return response.data.data;
+    async getUnitDashboard(id) {
+        const response = await api.get(`/analytics/unit/${id}`);
+        return response.data;
+    },
+    async getInnovationStats() {
+        const response = await api.get('/analytics/innovation-stats');
+        return response.data;
     },
 };
 
@@ -103,9 +108,49 @@ export const doctorService = {
     },
 };
 
+export const triageService = {
+    async submit(data) {
+        const response = await api.post('/triage', data);
+        return response.data;
+    },
+    async getAll(params = {}) {
+        const response = await api.get('/triage', { params });
+        return response.data;
+    },
+};
+
+export const stockService = {
+    async getAll(params = {}) {
+        const response = await api.get('/stock', { params });
+        return response.data;
+    },
+    async getById(id) {
+        const response = await api.get(`/stock/${id}`);
+        return response.data;
+    },
+    async adjust(id, data) {
+        const response = await api.post(`/stock/${id}/adjust`, data);
+        return response.data;
+    },
+};
+
+export const aiService = {
+    async chat(message, context = []) {
+        const response = await api.post('/ai/chat', { message, context });
+        return response.data;
+    },
+    async analyzeTriage(triageData) {
+        const response = await api.post('/ai/analyze-triage', { triageData });
+        return response.data;
+    },
+};
+
 export default {
     dashboard: dashboardService,
     appointments: appointmentService,
     patients: patientService,
     doctors: doctorService,
+    triage: triageService,
+    stock: stockService,
+    ai: aiService,
 };
